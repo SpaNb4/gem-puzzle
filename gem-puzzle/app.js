@@ -43,7 +43,6 @@ const GemPuzzle = {
     },
 
     handleDragStart(e) {
-        // Target (this) element is the source node.
         this.style.opacity = '0.4';
         dragSrcEl = this;
         e.dataTransfer.effectAllowed = 'move';
@@ -51,8 +50,8 @@ const GemPuzzle = {
     },
 
     handleDragEnd(e) {
+        // удаляем класс со всех элементов
         this.style.opacity = 1;
-        // this/e.target is the source node.
         [].forEach.call(cols, function (col) {
             col.classList.remove('over');
         });
@@ -60,43 +59,59 @@ const GemPuzzle = {
 
     handleDragOver(e) {
         if (e.preventDefault) {
-            e.preventDefault(); // Necessary. Allows us to drop.
+            e.preventDefault();
         }
-        e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+        e.dataTransfer.dropEffect = 'move';
         return false;
     },
 
     handleDragEnter(e) {
-        // this / e.target is the current hover target.
+        // добавляем класс для текущего элемента
         this.classList.add('over');
     },
 
     handleDragLeave(e) {
-        this.classList.remove('over');  // this / e.target is previous target element.
+        // удаляем класс с предыдущего элемента
+        this.classList.remove('over');
     },
 
     handleDrop(e) {
-        // this/e.target is current target element.
         if (e.stopPropagation) {
-            e.stopPropagation(); // Stops some browsers from redirecting.
+            e.stopPropagation();
         }
 
-        //
-        //// для отладки, перетянул 7 на 5 dragSrcEl=7, e=5;
-        //
-        console.log(e);
+        // dragSrcEl - что перетянули
+        // e.target - куда перетянули
+        let dragSrcEl_i = 0;
+        let dragSrcEl_j = 0;
         for (let i = 0; i < arr.length; i++) {
             if (arr[i].indexOf(dragSrcEl.innerHTML) != -1) {
-                let j = arr[i].indexOf(prev);
-                arr[i][j] = this.innerHTML;
-                i_del = i;
-                j_del = j;
+                let j = arr[i].indexOf(dragSrcEl.innerHTML);
+                dragSrcEl_i = i;
+                dragSrcEl_j = j
             }
         }
 
-        // Don't do anything if dropping the same column we're dragging.
-        if (dragSrcEl != this) {
-            // Set the source column's HTML to the HTML of the columnwe dropped on.
+        // разрешает перетягивать только ближайшие к пустой ячейке 
+        let bool = false;
+        if (dragSrcEl_i != arr.length - 1) {
+            if (arr[dragSrcEl_i + 1][dragSrcEl_j] == '' && e.target.innerHTML == '') {
+                bool = true;
+            }
+        }
+        if (arr[dragSrcEl_i][dragSrcEl_j + 1] == '' && e.target.innerHTML == '') {
+            bool = true;
+        }
+        if (arr[dragSrcEl_i][dragSrcEl_j - 1] == '' && e.target.innerHTML == '') {
+            bool = true;
+        }
+        if (arr[dragSrcEl_i - 1][dragSrcEl_j] == '' && e.target.innerHTML == '') {
+            bool = true;
+        }
+
+        // ничего не делает если подняли и опустили один и тот же элемент
+        // или пытаемся перетянуть не ближайший к пустой ячейке элемент
+        if (dragSrcEl != this && bool) {
             dragSrcEl.innerHTML = this.innerHTML;
             let prev = e.target.innerHTML;
             this.innerHTML = e.dataTransfer.getData('text/html');
@@ -113,7 +128,7 @@ const GemPuzzle = {
 
             for (let i = 0; i < arr.length; i++) {
                 for (let j = 0; j < arr.length; j++) {
-                    if (arr[i][j] == e.target.innerHTML && (j_del!=j || i_del!=i)) {
+                    if (arr[i][j] == e.target.innerHTML && (j_del != j || i_del != i)) {
                         arr[i][j] = '';
                         break;
                     }
