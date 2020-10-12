@@ -1,5 +1,5 @@
 .container {
-  max-width: 500px;
+  width: 50%;
   margin: 0 auto;
 }
 .container .cells_items {
@@ -11,7 +11,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 25%;
   height: 100px;
   background-color: aqua;
   font-size: 24px;
