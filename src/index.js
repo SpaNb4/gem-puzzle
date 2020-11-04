@@ -19,7 +19,7 @@ const GemPuzzle = {
 
         let time = document.createElement('div');
         time.classList.add('time');
-        time.innerHTML = 'Время:';
+        time.innerHTML = 'Время: ';
         let minutes = document.createElement('span');
         minutes.classList.add('minutes');
         minutes.innerHTML = '00';
@@ -36,7 +36,7 @@ const GemPuzzle = {
 
         let moves = document.createElement('div');
         moves.classList.add('moves');
-        moves.innerHTML = `Ходов:${this.moves}`;
+        moves.innerHTML = `Ходов: ${this.moves}`;
 
         let menuBtn = document.createElement('a');
         menuBtn.classList.add('resolveBtn');
@@ -53,7 +53,7 @@ const GemPuzzle = {
         overlay.classList.add('overlay');
         let game_menu_ul = document.createElement('ul');
         game_menu_ul.classList.add('game_menu');
-        let menu_arr = ['Новая игра', 'Счёт', 'Правила', 'Настройки'];
+        let menu_arr = ['Новая игра', 'Сохранить игру', 'Счёт', 'Правила', 'Настройки'];
 
         for (let i = 0; i < menu_arr.length; i++) {
             let game_menu_li = document.createElement('li');
@@ -79,17 +79,69 @@ const GemPuzzle = {
         this.time();
 
         // заполнение массива числами от 1 до number-1
+        // загрузка сохранённой игры из localstorage
         this.cols = document.querySelectorAll('.cells_item');
         let q = 0;
-        for (let i = 0; i < Math.sqrt(this.number); i++) {
-            this.arr[i] = [];
-            for (let j = 0; j < Math.sqrt(this.number); j++) {
-                this.arr[i][j] = (q + 1).toString();
-                if (q == this.number - 1) {
-                    this.arr[i][j] = '';
+        if (localStorage.getItem('gameSave')) {
+            this.arr = JSON.parse(localStorage.getItem('gameSave'));
+        } else {
+            for (let i = 0; i < Math.sqrt(this.number); i++) {
+                this.arr[i] = [];
+                for (let j = 0; j < Math.sqrt(this.number); j++) {
+                    this.arr[i][j] = (q + 1).toString();
+                    if (q == this.number - 1) {
+                        this.arr[i][j] = '';
+                    }
+                    q++;
                 }
-                q++;
             }
+
+            function randomInteger(min, max) {
+                let rand = min + Math.random() * (max + 1 - min);
+                return Math.floor(rand);
+            }
+
+            let mouseClickEmulation = {
+                target: {
+                    innerHTML: '',
+                },
+            };
+
+            // история ходов
+            let movesArr = [];
+            // перемешивание игрового поля
+            for (let n = 0; n < 10; n++) {
+                for (let i = 0; i < this.arr.length; i++) {
+                    for (let j = 0; j < this.arr.length; j++) {
+                        if (this.arr[i][j] == '') {
+                            let k = randomInteger(1, 4);
+                            if (i != this.arr.length - 1 && k == 1) {
+                                mouseClickEmulation.target.innerHTML = this.arr[i + 1][j];
+                            } else if (k == 2) {
+                                mouseClickEmulation.target.innerHTML = this.arr[i][j + 1];
+                            } else if (k == 3) {
+                                mouseClickEmulation.target.innerHTML = this.arr[i][j - 1];
+                            } else if (i != 0 && k == 4) {
+                                mouseClickEmulation.target.innerHTML = this.arr[i - 1][j];
+                            }
+                        }
+                    }
+                }
+                this.handleClick(mouseClickEmulation);
+
+                q = 0;
+                movesArr[n] = [];
+                for (let i = 0; i < Math.sqrt(this.number); i++) {
+                    movesArr[n][i] = [];
+                    for (let j = 0; j < Math.sqrt(this.number); j++) {
+                        this.arr[i][j] = this.cols[q].innerHTML;
+                        movesArr[n][i][j] = this.arr[i][j];
+                        q++;
+                    }
+                }
+            }
+            this.moves = -1;
+            this.incrementMoves();
         }
 
         // присвоение конкретным полям значений массива
@@ -98,51 +150,6 @@ const GemPuzzle = {
             for (let j = 0; j < Math.sqrt(this.number); j++) {
                 this.cols[q].innerHTML = this.arr[i][j];
                 q++;
-            }
-        }
-
-        function randomInteger(min, max) {
-            let rand = min + Math.random() * (max + 1 - min);
-            return Math.floor(rand);
-        }
-
-        let mouseClickEmulation = {
-            target: {
-                innerHTML: '',
-            },
-        };
-
-        // история ходов
-        let movesArr = [];
-        // перемешивание игрового поля
-        for (let n = 0; n < 10; n++) {
-            for (let i = 0; i < this.arr.length; i++) {
-                for (let j = 0; j < this.arr.length; j++) {
-                    if (this.arr[i][j] == '') {
-                        let k = randomInteger(1, 4);
-                        if (i != this.arr.length - 1 && k == 1) {
-                            mouseClickEmulation.target.innerHTML = this.arr[i + 1][j];
-                        } else if (k == 2) {
-                            mouseClickEmulation.target.innerHTML = this.arr[i][j + 1];
-                        } else if (k == 3) {
-                            mouseClickEmulation.target.innerHTML = this.arr[i][j - 1];
-                        } else if (i != 0 && k == 4) {
-                            mouseClickEmulation.target.innerHTML = this.arr[i - 1][j];
-                        }
-                    }
-                }
-            }
-            this.handleClick(mouseClickEmulation);
-
-            q = 0;
-            movesArr[n] = [];
-            for (let i = 0; i < Math.sqrt(this.number); i++) {
-                movesArr[n][i] = [];
-                for (let j = 0; j < Math.sqrt(this.number); j++) {
-                    this.arr[i][j] = this.cols[q].innerHTML;
-                    movesArr[n][i][j] = this.arr[i][j];
-                    q++;
-                }
             }
         }
 
@@ -161,11 +168,15 @@ const GemPuzzle = {
         let overlay = document.querySelector('.overlay');
         overlay.classList.toggle('visible');
 
-        let new_game_li=document.querySelector('li:first-child');
+        let new_game_li = document.querySelector('li:first-child');
         new_game_li.addEventListener('click', () => {
-            let container=document.querySelector('.container');
+            let container = document.querySelector('.container');
             container.remove();
             GemPuzzle.init();
+        });
+        let save_game_li = document.querySelector('li:nth-child(2)');
+        save_game_li.addEventListener('click', () => {
+            localStorage.setItem('gameSave', JSON.stringify(GemPuzzle.arr));
         });
     },
 
@@ -191,7 +202,7 @@ const GemPuzzle = {
     incrementMoves() {
         this.moves++;
         let moves = document.querySelector('.moves');
-        moves.innerHTML = `Ходов:${this.moves}`;
+        moves.innerHTML = `Ходов: ${this.moves}`;
     },
 
     handleDragStart(e) {
