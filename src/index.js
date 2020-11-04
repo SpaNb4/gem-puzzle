@@ -1,11 +1,11 @@
 import './assets/scss/main.scss';
 
-let arr = [];
-
 const GemPuzzle = {
-    number: 9,
+    number: 16,
     moves: 0,
+    arr: [],
     cols: null,
+    dragSrcEl: null,
 
     init() {
         let container = document.createElement('div');
@@ -13,6 +13,9 @@ const GemPuzzle = {
 
         let main = document.createElement('div');
         main.classList.add('cells_items');
+        let cells_item_row_count = Math.sqrt(this.number);
+        main.style.cssText = `grid-template-columns: repeat(${cells_item_row_count}, 1fr);
+                              grid-template-rows: repeat(${cells_item_row_count}, minmax(75px, auto));`;
 
         let time = document.createElement('div');
         time.classList.add('time');
@@ -35,48 +38,65 @@ const GemPuzzle = {
         moves.classList.add('moves');
         moves.innerHTML = `Ходов:${this.moves}`;
 
-        let cells_item_width = 100 / Math.sqrt(this.number);
-        for (let i = 1; i < this.number; i++) {
+        let menuBtn = document.createElement('a');
+        menuBtn.classList.add('resolveBtn');
+        menuBtn.innerHTML = `Меню`;
+        menuBtn.addEventListener('click', this.openMenu);
+
+        let top_menu = document.createElement('div');
+        top_menu.classList.add('top_menu');
+        top_menu.appendChild(time);
+        top_menu.appendChild(moves);
+        top_menu.appendChild(menuBtn);
+
+        let overlay = document.createElement('div');
+        overlay.classList.add('overlay');
+        let game_menu_ul = document.createElement('ul');
+        game_menu_ul.classList.add('game_menu');
+        let menu_arr = ['Новая игра', 'Счёт', 'Правила', 'Настройки'];
+
+        for (let i = 0; i < menu_arr.length; i++) {
+            let game_menu_li = document.createElement('li');
+            game_menu_li.innerHTML = menu_arr[i];
+            game_menu_ul.appendChild(game_menu_li);
+        }
+
+        overlay.appendChild(game_menu_ul);
+
+        for (let i = 0; i < this.number; i++) {
             let cells_item = document.createElement('div');
             cells_item.classList.add('cells_item');
-            cells_item.style.cssText = `width: calc(${cells_item_width}% - 10px)`;
             cells_item.setAttribute('draggable', true);
             main.appendChild(cells_item);
         }
 
-        // создаём пустой последний элемент
-        let cells_item = document.createElement('div');
-        cells_item.classList.add('cells_item');
-        cells_item.style.cssText = `width: calc(${cells_item_width}% - 10px)`;
-        cells_item.setAttribute('draggable', true);
-
-        main.appendChild(cells_item);
-
+        container.appendChild(top_menu);
+        main.appendChild(overlay);
         container.appendChild(main);
-        container.appendChild(time);
-        container.appendChild(moves);
 
         document.body.appendChild(container);
 
         this.time();
 
+        // заполнение массива числами от 1 до number-1
         this.cols = document.querySelectorAll('.cells_item');
         let q = 0;
         for (let i = 0; i < Math.sqrt(this.number); i++) {
-            arr[i] = [];
+            this.arr[i] = [];
             for (let j = 0; j < Math.sqrt(this.number); j++) {
-                arr[i][j] = (q + 1).toString();
+                this.arr[i][j] = (q + 1).toString();
                 if (q == this.number - 1) {
-                    arr[i][j] = '';
+                    this.arr[i][j] = '';
                 }
                 q++;
             }
         }
 
+        // присвоение конкретным полям значений массива
         q = 0;
         for (let i = 0; i < Math.sqrt(this.number); i++) {
             for (let j = 0; j < Math.sqrt(this.number); j++) {
-                this.cols[q].innerHTML = arr[i][j];
+                this.cols[q].innerHTML = this.arr[i][j];
                 q++;
             }
         }
@@ -91,25 +111,68 @@ const GemPuzzle = {
                 innerHTML: '',
             },
         };
-        for (let n = 0; n < 1290; n++) {
-            for (let i = 0; i < arr.length; i++) {
-                for (let j = 0; j < arr.length; j++) {
-                    if (arr[i][j] == '') {
+
+        // история ходов
+        let movesArr = [];
+        // перемешивание игрового поля
+        for (let n = 0; n < 10; n++) {
+            for (let i = 0; i < this.arr.length; i++) {
+                for (let j = 0; j < this.arr.length; j++) {
+                    if (this.arr[i][j] == '') {
                         let k = randomInteger(1, 4);
-                        if (i != arr.length - 1 && k == 1) {
-                            mouseClickEmulation.target.innerHTML = arr[i + 1][j];
+                        if (i != this.arr.length - 1 && k == 1) {
+                            mouseClickEmulation.target.innerHTML = this.arr[i + 1][j];
                         } else if (k == 2) {
-                            mouseClickEmulation.target.innerHTML = arr[i][j + 1];
+                            mouseClickEmulation.target.innerHTML = this.arr[i][j + 1];
                         } else if (k == 3) {
-                            mouseClickEmulation.target.innerHTML = arr[i][j - 1];
+                            mouseClickEmulation.target.innerHTML = this.arr[i][j - 1];
                         } else if (i != 0 && k == 4) {
-                            mouseClickEmulation.target.innerHTML = arr[i - 1][j];
+                            mouseClickEmulation.target.innerHTML = this.arr[i - 1][j];
                         }
                     }
                 }
             }
             this.handleClick(mouseClickEmulation);
+
+            q = 0;
+            movesArr[n] = [];
+            for (let i = 0; i < Math.sqrt(this.number); i++) {
+                movesArr[n][i] = [];
+                for (let j = 0; j < Math.sqrt(this.number); j++) {
+                    this.arr[i][j] = this.cols[q].innerHTML;
+                    movesArr[n][i][j] = this.arr[i][j];
+                    q++;
+                }
+            }
         }
+
+        [].forEach.call(this.cols, (col) => {
+            col.addEventListener('dragstart', this.handleDragStart.bind(GemPuzzle));
+            col.addEventListener('dragenter', this.handleDragEnter);
+            col.addEventListener('dragover', this.handleDragOver);
+            col.addEventListener('dragleave', this.handleDragLeave);
+            col.addEventListener('drop', this.handleDrop.bind(GemPuzzle));
+            col.addEventListener('dragend', this.handleDragEnd.bind(GemPuzzle));
+            col.addEventListener('click', this.handleClick.bind(GemPuzzle));
+        });
+    },
+
+    openMenu() {
+        let overlay = document.querySelector('.overlay');
+        overlay.classList.toggle('visible');
+
+        let new_game_li=document.querySelector('li:first-child');
+        new_game_li.addEventListener('click', () => {
+            let container=document.querySelector('.container');
+            container.remove();
+            GemPuzzle.init();
+        });
+    },
+
+    solvePuzzle() {
+        // console.log(movesArr);
+        // arr=movesArr[1];
+        // console.log(arr);
     },
 
     time() {
@@ -132,16 +195,16 @@ const GemPuzzle = {
     },
 
     handleDragStart(e) {
-        this.style.opacity = '0.4';
-        dragSrcEl = this;
+        e.target.style.opacity = '0.4';
+        this.dragSrcEl = e.target;
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.innerHTML);
+        e.dataTransfer.setData('text/html', e.target.innerHTML);
     },
 
     handleDragEnd(e) {
         // удаляем класс со всех элементов
-        this.style.opacity = 1;
-        [].forEach.call(GemPuzzle.cols, function (col) {
+        e.target.style.opacity = 1;
+        [].forEach.call(this.cols, function (col) {
             col.classList.remove('over');
         });
     },
@@ -173,42 +236,42 @@ const GemPuzzle = {
         // e.target - куда перетянули
         let dragSrcEl_i = 0;
         let dragSrcEl_j = 0;
-        for (let i = 0; i < arr.length; i++) {
-            if (arr[i].indexOf(dragSrcEl.innerHTML) != -1) {
-                let j = arr[i].indexOf(dragSrcEl.innerHTML);
+        for (let i = 0; i < this.arr.length; i++) {
+            if (this.arr[i].indexOf(this.dragSrcEl.innerHTML) != -1) {
+                let j = this.arr[i].indexOf(this.dragSrcEl.innerHTML);
                 dragSrcEl_i = i;
                 dragSrcEl_j = j;
             }
         }
         // разрешает перетягивать только ближайшие к пустой ячейке
         let isDraggable = false;
-        if (dragSrcEl_i != arr.length - 1 && arr[dragSrcEl_i + 1][dragSrcEl_j] == '' && e.target.innerHTML == '') {
+        if (dragSrcEl_i != this.arr.length - 1 && this.arr[dragSrcEl_i + 1][dragSrcEl_j] == '' && e.target.innerHTML == '') {
             isDraggable = true;
-        } else if (arr[dragSrcEl_i][dragSrcEl_j + 1] == '' && e.target.innerHTML == '') {
+        } else if (this.arr[dragSrcEl_i][dragSrcEl_j + 1] == '' && e.target.innerHTML == '') {
             isDraggable = true;
-        } else if (arr[dragSrcEl_i][dragSrcEl_j - 1] == '' && e.target.innerHTML == '') {
+        } else if (this.arr[dragSrcEl_i][dragSrcEl_j - 1] == '' && e.target.innerHTML == '') {
             isDraggable = true;
-        } else if (dragSrcEl_i != 0 && arr[dragSrcEl_i - 1][dragSrcEl_j] == '') {
+        } else if (dragSrcEl_i != 0 && this.arr[dragSrcEl_i - 1][dragSrcEl_j] == '') {
             isDraggable = true;
         }
 
         // ничего не делает если подняли и опустили один и тот же элемент
         // или пытаемся перетянуть не ближайший к пустой ячейке элемент
-        if (dragSrcEl != this && isDraggable) {
+        if (this.dragSrcEl != e.target && isDraggable) {
             if (e.target.innerHTML == '') {
-                GemPuzzle.incrementMoves();
-                dragSrcEl.innerHTML = this.innerHTML;
-                this.innerHTML = e.dataTransfer.getData('text/html');
+                this.incrementMoves();
+                this.dragSrcEl.innerHTML = e.target.innerHTML;
+                e.target.innerHTML = e.dataTransfer.getData('text/html');
 
-                for (let i = 0; i < arr.length; i++) {
-                    if (arr[i].indexOf('') != -1) {
-                        let j = arr[i].indexOf('');
+                for (let i = 0; i < this.arr.length; i++) {
+                    if (this.arr[i].indexOf('') != -1) {
+                        let j = this.arr[i].indexOf('');
                     }
                 }
                 let q = 0;
-                for (let i = 0; i < arr.length; i++) {
-                    for (let j = 0; j < arr.length; j++) {
-                        arr[i][j] = GemPuzzle.cols[q].innerHTML;
+                for (let i = 0; i < this.arr.length; i++) {
+                    for (let j = 0; j < this.arr.length; j++) {
+                        this.arr[i][j] = this.cols[q].innerHTML;
                         q++;
                     }
                 }
@@ -218,31 +281,34 @@ const GemPuzzle = {
     },
 
     handleClick(e) {
-        for (let i = 0; i < arr.length; i++) {
-            if (arr[i].indexOf(e.target.innerHTML) != -1) {
-                let j = arr[i].indexOf(e.target.innerHTML);
+        for (let i = 0; i < this.arr.length; i++) {
+            if (this.arr[i].indexOf(e.target.innerHTML) != -1) {
+                let j = this.arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
-                if (i != arr.length - 1 && arr[i + 1][j] == '') {
-                    arr[i + 1][j] = arr[i][j];
-                    arr[i][j] = '';
-                } else if (arr[i][j + 1] == '') {
-                    arr[i][j + 1] = arr[i][j];
-                    arr[i][j] = '';
-                } else if (arr[i][j - 1] == '') {
-                    arr[i][j - 1] = arr[i][j];
-                    arr[i][j] = '';
-                } else if (i != 0 && arr[i - 1][j] == '') {
-                    arr[i - 1][j] = arr[i][j];
-                    arr[i][j] = '';
+                if (i != this.arr.length - 1 && this.arr[i + 1][j] == '') {
+                    this.arr[i + 1][j] = this.arr[i][j];
+                    this.arr[i][j] = '';
+                    this.incrementMoves();
+                } else if (this.arr[i][j + 1] == '') {
+                    this.arr[i][j + 1] = this.arr[i][j];
+                    this.arr[i][j] = '';
+                    this.incrementMoves();
+                } else if (this.arr[i][j - 1] == '') {
+                    this.arr[i][j - 1] = this.arr[i][j];
+                    this.arr[i][j] = '';
+                    this.incrementMoves();
+                } else if (i != 0 && this.arr[i - 1][j] == '') {
+                    this.arr[i - 1][j] = this.arr[i][j];
+                    this.arr[i][j] = '';
+                    this.incrementMoves();
                 }
-                GemPuzzle.incrementMoves();
                 break;
             }
         }
         let q = 0;
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = 0; j < arr.length; j++) {
-                GemPuzzle.cols[q].innerHTML = arr[i][j];
+        for (let i = 0; i < this.arr.length; i++) {
+            for (let j = 0; j < this.arr.length; j++) {
+                this.cols[q].innerHTML = this.arr[i][j];
                 q++;
             }
         }
@@ -250,13 +316,3 @@ const GemPuzzle = {
 };
 
 GemPuzzle.init();
-let dragSrcEl = null;
-[].forEach.call(GemPuzzle.cols, function (col) {
-    col.addEventListener('dragstart', GemPuzzle.handleDragStart, false);
-    col.addEventListener('dragenter', GemPuzzle.handleDragEnter, false);
-    col.addEventListener('dragover', GemPuzzle.handleDragOver, false);
-    col.addEventListener('dragleave', GemPuzzle.handleDragLeave, false);
-    col.addEventListener('drop', GemPuzzle.handleDrop, false);
-    col.addEventListener('dragend', GemPuzzle.handleDragEnd, false);
-    col.addEventListener('click', GemPuzzle.handleClick, false);
-});
