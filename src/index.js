@@ -1,7 +1,8 @@
 import './assets/scss/main.scss';
 
 const GemPuzzle = {
-    number: 16,
+    size: 16,
+    selIndex: 1,
     moves: 0,
     arr: [],
     cols: null,
@@ -13,7 +14,41 @@ const GemPuzzle = {
 
         let main = document.createElement('div');
         main.classList.add('cells_items');
-        let cells_item_row_count = Math.sqrt(this.number);
+
+        let fieldSize = document.createElement('select');
+        fieldSize.classList.add('field_size');
+        let fieldSize_arr = ['3x3', '4x4', '5x5', '6x6', '7x7', '8x8'];
+        for (let i = 0; i < fieldSize_arr.length; i++) {
+            let fieldSize_option = document.createElement('option');
+            fieldSize_option.innerHTML = fieldSize_arr[i];
+            fieldSize.appendChild(fieldSize_option);
+        }
+
+        // размер поля по умолчанию 4x4
+        if (this.selIndex == 0) {
+            this.size = 9;
+        } else if (this.selIndex == 1) {
+            this.size = 16;
+        } else if (this.selIndex == 2) {
+            this.size = 25;
+        } else if (this.selIndex == 3) {
+            this.size = 36;
+        } else if (this.selIndex == 4) {
+            this.size = 49;
+        } else if (this.selIndex == 5) {
+            this.size = 64;
+        }
+
+        fieldSize.selectedIndex = this.selIndex;
+        fieldSize.addEventListener('change', () => {
+            let container = document.querySelector('.container');
+            this.selIndex = fieldSize.options.selectedIndex;
+            container.remove();
+            this.arr = [];
+            this.init();
+        });
+
+        let cells_item_row_count = Math.sqrt(this.size);
         main.style.cssText = `grid-template-columns: repeat(${cells_item_row_count}, 1fr);
                               grid-template-rows: repeat(${cells_item_row_count}, minmax(75px, auto));`;
 
@@ -40,7 +75,7 @@ const GemPuzzle = {
 
         let menuBtn = document.createElement('a');
         menuBtn.classList.add('resolveBtn');
-        menuBtn.innerHTML = `Меню`;
+        menuBtn.innerHTML = 'Меню';
         menuBtn.addEventListener('click', this.openMenu);
 
         let top_menu = document.createElement('div');
@@ -54,7 +89,6 @@ const GemPuzzle = {
         let game_menu_ul = document.createElement('ul');
         game_menu_ul.classList.add('game_menu');
         let menu_arr = ['Новая игра', 'Сохранить игру', 'Счёт', 'Правила', 'Настройки'];
-
         for (let i = 0; i < menu_arr.length; i++) {
             let game_menu_li = document.createElement('li');
             game_menu_li.innerHTML = menu_arr[i];
@@ -63,7 +97,7 @@ const GemPuzzle = {
 
         overlay.appendChild(game_menu_ul);
 
-        for (let i = 0; i < this.number; i++) {
+        for (let i = 0; i < this.size; i++) {
             let cells_item = document.createElement('div');
             cells_item.classList.add('cells_item');
             cells_item.setAttribute('draggable', true);
@@ -73,32 +107,28 @@ const GemPuzzle = {
         container.appendChild(top_menu);
         main.appendChild(overlay);
         container.appendChild(main);
+        container.appendChild(fieldSize);
 
         document.body.appendChild(container);
 
         this.time();
 
-        // заполнение массива числами от 1 до number-1
+        // заполнение массива числами от 1 до size-1
         // загрузка сохранённой игры из localstorage
         this.cols = document.querySelectorAll('.cells_item');
         let q = 0;
         if (localStorage.getItem('gameSave')) {
             this.arr = JSON.parse(localStorage.getItem('gameSave'));
         } else {
-            for (let i = 0; i < Math.sqrt(this.number); i++) {
+            for (let i = 0; i < Math.sqrt(this.size); i++) {
                 this.arr[i] = [];
-                for (let j = 0; j < Math.sqrt(this.number); j++) {
+                for (let j = 0; j < Math.sqrt(this.size); j++) {
                     this.arr[i][j] = (q + 1).toString();
-                    if (q == this.number - 1) {
+                    if (q == this.size - 1) {
                         this.arr[i][j] = '';
                     }
                     q++;
                 }
-            }
-
-            function randomInteger(min, max) {
-                let rand = min + Math.random() * (max + 1 - min);
-                return Math.floor(rand);
             }
 
             let mouseClickEmulation = {
@@ -114,7 +144,7 @@ const GemPuzzle = {
                 for (let i = 0; i < this.arr.length; i++) {
                     for (let j = 0; j < this.arr.length; j++) {
                         if (this.arr[i][j] == '') {
-                            let k = randomInteger(1, 4);
+                            let k = this.randomInteger(1, 4);
                             if (i != this.arr.length - 1 && k == 1) {
                                 mouseClickEmulation.target.innerHTML = this.arr[i + 1][j];
                             } else if (k == 2) {
@@ -131,9 +161,9 @@ const GemPuzzle = {
 
                 q = 0;
                 movesArr[n] = [];
-                for (let i = 0; i < Math.sqrt(this.number); i++) {
+                for (let i = 0; i < Math.sqrt(this.size); i++) {
                     movesArr[n][i] = [];
-                    for (let j = 0; j < Math.sqrt(this.number); j++) {
+                    for (let j = 0; j < Math.sqrt(this.size); j++) {
                         this.arr[i][j] = this.cols[q].innerHTML;
                         movesArr[n][i][j] = this.arr[i][j];
                         q++;
@@ -146,8 +176,8 @@ const GemPuzzle = {
 
         // присвоение конкретным полям значений массива
         q = 0;
-        for (let i = 0; i < Math.sqrt(this.number); i++) {
-            for (let j = 0; j < Math.sqrt(this.number); j++) {
+        for (let i = 0; i < Math.sqrt(this.size); i++) {
+            for (let j = 0; j < Math.sqrt(this.size); j++) {
                 this.cols[q].innerHTML = this.arr[i][j];
                 q++;
             }
@@ -162,6 +192,11 @@ const GemPuzzle = {
             col.addEventListener('dragend', this.handleDragEnd.bind(GemPuzzle));
             col.addEventListener('click', this.handleClick.bind(GemPuzzle));
         });
+    },
+
+    randomInteger(min, max) {
+        let rand = min + Math.random() * (max + 1 - min);
+        return Math.floor(rand);
     },
 
     openMenu() {
@@ -228,12 +263,12 @@ const GemPuzzle = {
         return false;
     },
 
-    handleDragEnter(e) {
+    handleDragEnter() {
         // добавляем класс для текущего элемента
         this.classList.add('over');
     },
 
-    handleDragLeave(e) {
+    handleDragLeave() {
         // удаляем класс с предыдущего элемента
         this.classList.remove('over');
     },
@@ -274,11 +309,6 @@ const GemPuzzle = {
                 this.dragSrcEl.innerHTML = e.target.innerHTML;
                 e.target.innerHTML = e.dataTransfer.getData('text/html');
 
-                for (let i = 0; i < this.arr.length; i++) {
-                    if (this.arr[i].indexOf('') != -1) {
-                        let j = this.arr[i].indexOf('');
-                    }
-                }
                 let q = 0;
                 for (let i = 0; i < this.arr.length; i++) {
                     for (let j = 0; j < this.arr.length; j++) {
