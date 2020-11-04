@@ -1,10 +1,11 @@
-import "./assets/scss/main.scss";
+import './assets/scss/main.scss';
 
 let arr = [];
 
 const GemPuzzle = {
     number: 9,
     moves: 0,
+    cols: null,
 
     init() {
         let container = document.createElement('div');
@@ -40,7 +41,6 @@ const GemPuzzle = {
             cells_item.classList.add('cells_item');
             cells_item.style.cssText = `width: calc(${cells_item_width}% - 10px)`;
             cells_item.setAttribute('draggable', true);
-            cells_item.innerHTML = i;
             main.appendChild(cells_item);
         }
 
@@ -49,23 +49,66 @@ const GemPuzzle = {
         cells_item.classList.add('cells_item');
         cells_item.style.cssText = `width: calc(${cells_item_width}% - 10px)`;
         cells_item.setAttribute('draggable', true);
-        cells_item.innerHTML = '';
 
         main.appendChild(cells_item);
+
         container.appendChild(main);
         container.appendChild(time);
         container.appendChild(moves);
 
         document.body.appendChild(container);
+
         this.time();
-        let cols = document.querySelectorAll('.cells_item');
+
+        this.cols = document.querySelectorAll('.cells_item');
         let q = 0;
         for (let i = 0; i < Math.sqrt(this.number); i++) {
             arr[i] = [];
             for (let j = 0; j < Math.sqrt(this.number); j++) {
-                arr[i][j] = cols[q].innerHTML;
+                arr[i][j] = (q + 1).toString();
+                if (q == this.number - 1) {
+                    arr[i][j] = '';
+                }
                 q++;
             }
+        }
+
+        q = 0;
+        for (let i = 0; i < Math.sqrt(this.number); i++) {
+            for (let j = 0; j < Math.sqrt(this.number); j++) {
+                this.cols[q].innerHTML = arr[i][j];
+                q++;
+            }
+        }
+
+        function randomInteger(min, max) {
+            let rand = min + Math.random() * (max + 1 - min);
+            return Math.floor(rand);
+        }
+
+        let mouseClickEmulation = {
+            target: {
+                innerHTML: '',
+            },
+        };
+        for (let n = 0; n < 1290; n++) {
+            for (let i = 0; i < arr.length; i++) {
+                for (let j = 0; j < arr.length; j++) {
+                    if (arr[i][j] == '') {
+                        let k = randomInteger(1, 4);
+                        if (i != arr.length - 1 && k == 1) {
+                            mouseClickEmulation.target.innerHTML = arr[i + 1][j];
+                        } else if (k == 2) {
+                            mouseClickEmulation.target.innerHTML = arr[i][j + 1];
+                        } else if (k == 3) {
+                            mouseClickEmulation.target.innerHTML = arr[i][j - 1];
+                        } else if (i != 0 && k == 4) {
+                            mouseClickEmulation.target.innerHTML = arr[i - 1][j];
+                        }
+                    }
+                }
+            }
+            this.handleClick(mouseClickEmulation);
         }
     },
 
@@ -98,7 +141,7 @@ const GemPuzzle = {
     handleDragEnd(e) {
         // удаляем класс со всех элементов
         this.style.opacity = 1;
-        [].forEach.call(cols, function (col) {
+        [].forEach.call(GemPuzzle.cols, function (col) {
             col.classList.remove('over');
         });
     },
@@ -137,51 +180,36 @@ const GemPuzzle = {
                 dragSrcEl_j = j;
             }
         }
-        console.log(dragSrcEl_i, dragSrcEl_j);
         // разрешает перетягивать только ближайшие к пустой ячейке
-        let bool = false;
-        if (dragSrcEl_i != arr.length - 1) {
-            if (arr[dragSrcEl_i + 1][dragSrcEl_j] == '' && e.target.innerHTML == '') {
-                bool = true;
-                GemPuzzle.incrementMoves();
-            }
-        }
-        if (arr[dragSrcEl_i][dragSrcEl_j + 1] == '' && e.target.innerHTML == '') {
-            bool = true;
-            GemPuzzle.incrementMoves();
+        let isDraggable = false;
+        if (dragSrcEl_i != arr.length - 1 && arr[dragSrcEl_i + 1][dragSrcEl_j] == '' && e.target.innerHTML == '') {
+            isDraggable = true;
+        } else if (arr[dragSrcEl_i][dragSrcEl_j + 1] == '' && e.target.innerHTML == '') {
+            isDraggable = true;
         } else if (arr[dragSrcEl_i][dragSrcEl_j - 1] == '' && e.target.innerHTML == '') {
-            bool = true;
-            GemPuzzle.incrementMoves();
-        }
-        if (dragSrcEl_i != 0) {
-            if (arr[dragSrcEl_i - 1][dragSrcEl_j] == '' && e.target.innerHTML == '') {
-                bool = true;
-                GemPuzzle.incrementMoves();
-            }
+            isDraggable = true;
+        } else if (dragSrcEl_i != 0 && arr[dragSrcEl_i - 1][dragSrcEl_j] == '') {
+            isDraggable = true;
         }
 
         // ничего не делает если подняли и опустили один и тот же элемент
         // или пытаемся перетянуть не ближайший к пустой ячейке элемент
-        if (dragSrcEl != this && bool) {
-            dragSrcEl.innerHTML = this.innerHTML;
-            let prev = e.target.innerHTML;
-            this.innerHTML = e.dataTransfer.getData('text/html');
-            let i_del = 0;
-            let j_del = 0;
-            for (let i = 0; i < arr.length; i++) {
-                if (arr[i].indexOf(prev) != -1) {
-                    let j = arr[i].indexOf(prev);
-                    arr[i][j] = this.innerHTML;
-                    i_del = i;
-                    j_del = j;
-                }
-            }
+        if (dragSrcEl != this && isDraggable) {
+            if (e.target.innerHTML == '') {
+                GemPuzzle.incrementMoves();
+                dragSrcEl.innerHTML = this.innerHTML;
+                this.innerHTML = e.dataTransfer.getData('text/html');
 
-            for (let i = 0; i < arr.length; i++) {
-                for (let j = 0; j < arr.length; j++) {
-                    if (arr[i][j] == e.target.innerHTML && (j_del != j || i_del != i)) {
-                        arr[i][j] = '';
-                        break;
+                for (let i = 0; i < arr.length; i++) {
+                    if (arr[i].indexOf('') != -1) {
+                        let j = arr[i].indexOf('');
+                    }
+                }
+                let q = 0;
+                for (let i = 0; i < arr.length; i++) {
+                    for (let j = 0; j < arr.length; j++) {
+                        arr[i][j] = GemPuzzle.cols[q].innerHTML;
+                        q++;
                     }
                 }
             }
@@ -194,62 +222,36 @@ const GemPuzzle = {
             if (arr[i].indexOf(e.target.innerHTML) != -1) {
                 let j = arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
-                if (i != arr.length - 1) {
-                    if (arr[i + 1][j] == '') {
-                        for (let n = 0; n < cols.length; n++) {
-                            if (cols[n].innerHTML == '') {
-                                cols[n].innerHTML = e.target.innerHTML;
-                            }
-                        }
-                        arr[i + 1][j] = e.target.innerHTML;
-                        arr[i][j] = '';
-                        e.target.innerHTML = '';
-                        GemPuzzle.incrementMoves();
-                    }
-                }
-                if (arr[i][j + 1] == '') {
-                    for (let n = 0; n < cols.length; n++) {
-                        if (cols[n].innerHTML == '') {
-                            cols[n].innerHTML = e.target.innerHTML;
-                        }
-                    }
-                    arr[i][j + 1] = e.target.innerHTML;
+                if (i != arr.length - 1 && arr[i + 1][j] == '') {
+                    arr[i + 1][j] = arr[i][j];
                     arr[i][j] = '';
-                    e.target.innerHTML = '';
-                    GemPuzzle.incrementMoves();
+                } else if (arr[i][j + 1] == '') {
+                    arr[i][j + 1] = arr[i][j];
+                    arr[i][j] = '';
                 } else if (arr[i][j - 1] == '') {
-                    for (let n = 0; n < cols.length; n++) {
-                        if (cols[n].innerHTML == '') {
-                            cols[n].innerHTML = e.target.innerHTML;
-                        }
-                    }
-                    arr[i][j - 1] = e.target.innerHTML;
+                    arr[i][j - 1] = arr[i][j];
                     arr[i][j] = '';
-                    e.target.innerHTML = '';
-                    GemPuzzle.incrementMoves();
+                } else if (i != 0 && arr[i - 1][j] == '') {
+                    arr[i - 1][j] = arr[i][j];
+                    arr[i][j] = '';
                 }
-                if (i != 0) {
-                    if (arr[i - 1][j] == '') {
-                        for (let n = 0; n < cols.length; n++) {
-                            if (cols[n].innerHTML == '') {
-                                cols[n].innerHTML = e.target.innerHTML;
-                            }
-                        }
-                        arr[i - 1][j] = e.target.innerHTML;
-                        arr[i][j] = '';
-                        e.target.innerHTML = '';
-                        GemPuzzle.incrementMoves();
-                    }
-                }
+                GemPuzzle.incrementMoves();
+                break;
+            }
+        }
+        let q = 0;
+        for (let i = 0; i < arr.length; i++) {
+            for (let j = 0; j < arr.length; j++) {
+                GemPuzzle.cols[q].innerHTML = arr[i][j];
+                q++;
             }
         }
     },
 };
 
 GemPuzzle.init();
-let cols = document.querySelectorAll('.cells_item');
 let dragSrcEl = null;
-[].forEach.call(cols, function (col) {
+[].forEach.call(GemPuzzle.cols, function (col) {
     col.addEventListener('dragstart', GemPuzzle.handleDragStart, false);
     col.addEventListener('dragenter', GemPuzzle.handleDragEnter, false);
     col.addEventListener('dragover', GemPuzzle.handleDragOver, false);
