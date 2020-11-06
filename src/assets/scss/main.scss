@@ -34,7 +34,8 @@
                 outline: 2px dashed #000;
             }
         }
-        .overlay {
+        .overlay,
+        .best_score {
             display: none;
             font-size: 24px;
             color: #87ff8e;
@@ -56,6 +57,23 @@
                     cursor: pointer;
                     margin-bottom: 20px;
                 }
+            }
+        }
+        .best_score {
+            h3 {
+                font-size: 24px;
+                margin: 0;
+            }
+            table {
+                font-size: 18px;
+                text-align: center;
+                td {
+                    padding: 1px 10px;
+                }
+            }
+            &.visible {
+                flex-direction: column;
+                justify-content: space-between;
             }
         }
     }
