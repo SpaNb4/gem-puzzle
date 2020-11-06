@@ -160,9 +160,9 @@ const GemPuzzle = {
                 }
             }
 
-            for (let n = 0; n < 120; n++) {
-                let i = this.randomInteger(0, Math.sqrt(this.size)-1);
-                let j = this.randomInteger(0, Math.sqrt(this.size)-1);
+            for (let n = 0; n < 20; n++) {
+                let i = this.randomInteger(0, Math.sqrt(this.size) - 1);
+                let j = this.randomInteger(0, Math.sqrt(this.size) - 1);
                 this.checkNextEl(i, j, findEl(this.arr[i][j]));
 
                 // q = 0;
@@ -368,12 +368,44 @@ const GemPuzzle = {
         }
     },
 
+    checkWin() {
+        // выигрышная комбинация
+        let winArr = [];
+        let q = 0;
+        for (let i = 0; i < this.arr.length; i++) {
+            winArr[i] = [];
+            for (let j = 0; j < this.arr.length; j++) {
+                winArr[i][j] = (q + 1).toString();
+                if (q == this.size - 1) {
+                    winArr[i][j] = '';
+                }
+                q++;
+            }
+        }
+
+        let isWin = true;
+        for (let i = 0; i < this.arr.length; i++) {
+            for (let j = 0; j < this.arr.length; j++) {
+                if (this.arr[i][j] != winArr[i][j]) {
+                    isWin = false;
+                }
+            }
+        }
+
+        if (isWin == true) {
+            let minutes=document.querySelector('.minutes').innerHTML;
+            let seconds=document.querySelector('.seconds').innerHTML;
+            alert(`Ура! Вы решили головоломку за ${minutes}:${seconds} и ${this.moves} ходов`);
+        }
+    },
+
     handleClick(e) {
         for (let i = 0; i < this.arr.length; i++) {
             if (this.arr[i].indexOf(e.target.innerHTML) != -1) {
                 let j = this.arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
-                this.checkNextEl(i, j, e.target);
+                this.checkNextEl(i, j, e.target, true);
+                this.checkWin();
                 break;
             }
         }
