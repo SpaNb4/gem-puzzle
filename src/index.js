@@ -100,6 +100,11 @@ const GemPuzzle = {
         for (let i = 0; i < this.size; i++) {
             let cells_item = document.createElement('div');
             cells_item.classList.add('cells_item');
+            cells_item.style.order = i + 1;
+            if (i == this.size - 1) {
+                cells_item.style.backgroundColor = 'transparent';
+                cells_item.style.border = 'none';
+            }
             cells_item.setAttribute('draggable', true);
             main.appendChild(cells_item);
         }
@@ -131,56 +136,47 @@ const GemPuzzle = {
                 }
             }
 
-            let mouseClickEmulation = {
-                target: {
-                    innerHTML: '',
-                },
-            };
+            // присвоение конкретным полям значений массива
+            q = 0;
+            for (let i = 0; i < Math.sqrt(this.size); i++) {
+                for (let j = 0; j < Math.sqrt(this.size); j++) {
+                    this.cols[q].innerHTML = this.arr[i][j];
+                    if (q == this.size - 1) {
+                        this.cols[q].dataset.empty = true;
+                    }
+                    q++;
+                }
+            }
 
             // история ходов
             let movesArr = [];
             // перемешивание игрового поля
-            for (let n = 0; n < 10; n++) {
-                for (let i = 0; i < this.arr.length; i++) {
-                    for (let j = 0; j < this.arr.length; j++) {
-                        if (this.arr[i][j] == '') {
-                            let k = this.randomInteger(1, 4);
-                            if (i != this.arr.length - 1 && k == 1) {
-                                mouseClickEmulation.target.innerHTML = this.arr[i + 1][j];
-                            } else if (k == 2) {
-                                mouseClickEmulation.target.innerHTML = this.arr[i][j + 1];
-                            } else if (k == 3) {
-                                mouseClickEmulation.target.innerHTML = this.arr[i][j - 1];
-                            } else if (i != 0 && k == 4) {
-                                mouseClickEmulation.target.innerHTML = this.arr[i - 1][j];
-                            }
-                        }
-                    }
-                }
-                this.handleClick(mouseClickEmulation);
 
-                q = 0;
-                movesArr[n] = [];
-                for (let i = 0; i < Math.sqrt(this.size); i++) {
-                    movesArr[n][i] = [];
-                    for (let j = 0; j < Math.sqrt(this.size); j++) {
-                        this.arr[i][j] = this.cols[q].innerHTML;
-                        movesArr[n][i][j] = this.arr[i][j];
-                        q++;
+            function findEl(el) {
+                for (let i = 0; i < GemPuzzle.cols.length; i++) {
+                    if (GemPuzzle.cols[i].style.order == el) {
+                        return GemPuzzle.cols[i];
                     }
                 }
+            }
+
+            for (let n = 0; n < 120; n++) {
+                let i = this.randomInteger(0, Math.sqrt(this.size)-1);
+                let j = this.randomInteger(0, Math.sqrt(this.size)-1);
+                this.checkNextEl(i, j, findEl(this.arr[i][j]));
+
+                // q = 0;
+                // movesArr[n] = [];
+                // for (let i = 0; i < Math.sqrt(this.size); i++) {
+                //     movesArr[n][i] = [];
+                //     for (let j = 0; j < Math.sqrt(this.size); j++) {
+                //         this.arr[i][j] = this.cols[q].innerHTML;
+                //         movesArr[n][i][j] = this.arr[i][j];
+                //         q++;
+                //     }
+                // }
             }
             this.moves = -1;
-            this.incrementMoves();
-        }
-
-        // присвоение конкретным полям значений массива
-        q = 0;
-        for (let i = 0; i < Math.sqrt(this.size); i++) {
-            for (let j = 0; j < Math.sqrt(this.size); j++) {
-                this.cols[q].innerHTML = this.arr[i][j];
-                q++;
-            }
         }
 
         [].forEach.call(this.cols, (col) => {
@@ -215,11 +211,7 @@ const GemPuzzle = {
         });
     },
 
-    solvePuzzle() {
-        // console.log(movesArr);
-        // arr=movesArr[1];
-        // console.log(arr);
-    },
+    solvePuzzle() {},
 
     time() {
         let sec = 0;
@@ -321,36 +313,68 @@ const GemPuzzle = {
         return false;
     },
 
+    swapCell(target) {
+        let posEmptyEl;
+        for (let i = 0; i < this.cols.length; i++) {
+            if (this.cols[i].dataset.empty == 'true') {
+                posEmptyEl = i;
+            }
+        }
+
+        let temp = target.style.order;
+        target.style.order = this.cols[posEmptyEl].style.order;
+        this.cols[posEmptyEl].style.order = temp;
+
+        function rowPos(target) {
+            let rowPosition;
+            let size = Math.sqrt(GemPuzzle.size);
+            if (target.style.order % size == 0) {
+                rowPosition = Math.floor(target.style.order / size) - 1;
+            } else {
+                rowPosition = Math.floor(target.style.order / size);
+            }
+            return rowPosition;
+        }
+
+        function colPos(target) {
+            let colPosition;
+            let size = Math.sqrt(GemPuzzle.size);
+            if (target.style.order % size == 0) {
+                colPosition = size;
+            } else {
+                colPosition = target.style.order % size;
+            }
+            return colPosition - 1;
+        }
+
+        this.arr[rowPos(this.cols[posEmptyEl])][colPos(this.cols[posEmptyEl])] = '';
+
+        this.arr[rowPos(target)][colPos(target)] = target.innerHTML;
+    },
+
+    checkNextEl(i, j, target) {
+        if (i != this.arr.length - 1 && this.arr[i + 1][j] == '') {
+            this.swapCell(target);
+            this.incrementMoves();
+        } else if (this.arr[i][j + 1] == '') {
+            this.swapCell(target);
+            this.incrementMoves();
+        } else if (this.arr[i][j - 1] == '') {
+            this.swapCell(target);
+            this.incrementMoves();
+        } else if (i != 0 && this.arr[i - 1][j] == '') {
+            this.swapCell(target);
+            this.incrementMoves();
+        }
+    },
+
     handleClick(e) {
         for (let i = 0; i < this.arr.length; i++) {
             if (this.arr[i].indexOf(e.target.innerHTML) != -1) {
                 let j = this.arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
-                if (i != this.arr.length - 1 && this.arr[i + 1][j] == '') {
-                    this.arr[i + 1][j] = this.arr[i][j];
-                    this.arr[i][j] = '';
-                    this.incrementMoves();
-                } else if (this.arr[i][j + 1] == '') {
-                    this.arr[i][j + 1] = this.arr[i][j];
-                    this.arr[i][j] = '';
-                    this.incrementMoves();
-                } else if (this.arr[i][j - 1] == '') {
-                    this.arr[i][j - 1] = this.arr[i][j];
-                    this.arr[i][j] = '';
-                    this.incrementMoves();
-                } else if (i != 0 && this.arr[i - 1][j] == '') {
-                    this.arr[i - 1][j] = this.arr[i][j];
-                    this.arr[i][j] = '';
-                    this.incrementMoves();
-                }
+                this.checkNextEl(i, j, e.target);
                 break;
-            }
-        }
-        let q = 0;
-        for (let i = 0; i < this.arr.length; i++) {
-            for (let j = 0; j < this.arr.length; j++) {
-                this.cols[q].innerHTML = this.arr[i][j];
-                q++;
             }
         }
     },
