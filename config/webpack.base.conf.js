@@ -50,7 +50,7 @@ module.exports = {
       }
     },
     {
-      test: /\.(png|jpg|gif|svg)$/,
+      test: /\.(png|jpg|gif|svg|mp3)$/,
       loader: "file-loader",
       options: {
         name: "[name].[ext]"

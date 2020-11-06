@@ -1,9 +1,11 @@
 import './assets/scss/main.scss';
+import movesound from './assets/sounds/move.mp3';
 
 const GemPuzzle = {
     size: 16,
     selIndex: 1,
     moves: 0,
+    isSound: true,
     arr: [],
     cols: null,
     dragSrcEl: null,
@@ -97,6 +99,18 @@ const GemPuzzle = {
 
         overlay.appendChild(game_menu_ul);
 
+        let sound = document.createElement('div');
+        sound.classList.add('sound');
+        sound.innerHTML = 'Выключить звук';
+        sound.addEventListener('click', () => {
+            this.isSound = !this.isSound;
+            if (this.isSound) {
+                sound.innerHTML = 'Выключить звук';
+            } else {
+                sound.innerHTML = 'Включить звук';
+            }
+        });
+
         for (let i = 0; i < this.size; i++) {
             let cells_item = document.createElement('div');
             cells_item.classList.add('cells_item');
@@ -113,6 +127,7 @@ const GemPuzzle = {
         main.appendChild(overlay);
         container.appendChild(main);
         container.appendChild(fieldSize);
+        container.appendChild(sound);
 
         document.body.appendChild(container);
 
@@ -393,9 +408,16 @@ const GemPuzzle = {
         }
 
         if (isWin == true) {
-            let minutes=document.querySelector('.minutes').innerHTML;
-            let seconds=document.querySelector('.seconds').innerHTML;
+            let minutes = document.querySelector('.minutes').innerHTML;
+            let seconds = document.querySelector('.seconds').innerHTML;
             alert(`Ура! Вы решили головоломку за ${minutes}:${seconds} и ${this.moves} ходов`);
+        }
+    },
+
+    moveSound() {
+        if (this.isSound) {
+            let sound = new Audio(movesound);
+            sound.play();
         }
     },
 
@@ -406,6 +428,7 @@ const GemPuzzle = {
                 // i j - позиция элемента на который кликнули
                 this.checkNextEl(i, j, e.target, true);
                 this.checkWin();
+                this.moveSound();
                 break;
             }
         }
