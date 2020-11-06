@@ -15,56 +15,56 @@ const GemPuzzle = {
         let container = document.createElement('div');
         container.classList.add('container');
 
-        let main = document.createElement('div');
+        const main = document.createElement('div');
         main.classList.add('cells_items');
 
-        let fieldSize = document.createElement('select');
+        const fieldSize = document.createElement('select');
         fieldSize.classList.add('field_size');
-        let fieldSize_arr = ['3x3', '4x4', '5x5', '6x6', '7x7', '8x8'];
-        for (let i = 0; i < fieldSize_arr.length; i++) {
-            let fieldSize_option = document.createElement('option');
-            fieldSize_option.innerHTML = fieldSize_arr[i];
-            fieldSize.appendChild(fieldSize_option);
+        const fieldSizeArr = ['3x3', '4x4', '5x5', '6x6', '7x7', '8x8'];
+        for (let i = 0; i < fieldSizeArr.length; i += 1) {
+            const fieldSizeOption = document.createElement('option');
+            fieldSizeOption.innerHTML = fieldSizeArr[i];
+            fieldSize.appendChild(fieldSizeOption);
         }
 
         // размер поля по умолчанию 4x4
-        if (this.selIndex == 0) {
+        if (this.selIndex === 0) {
             this.size = 9;
-        } else if (this.selIndex == 1) {
+        } else if (this.selIndex === 1) {
             this.size = 16;
-        } else if (this.selIndex == 2) {
+        } else if (this.selIndex === 2) {
             this.size = 25;
-        } else if (this.selIndex == 3) {
+        } else if (this.selIndex === 3) {
             this.size = 36;
-        } else if (this.selIndex == 4) {
+        } else if (this.selIndex === 4) {
             this.size = 49;
-        } else if (this.selIndex == 5) {
+        } else if (this.selIndex === 5) {
             this.size = 64;
         }
 
         fieldSize.selectedIndex = this.selIndex;
         fieldSize.addEventListener('change', () => {
-            let container = document.querySelector('.container');
+            container = document.querySelector('.container');
             this.selIndex = fieldSize.options.selectedIndex;
             container.remove();
             this.arr = [];
             this.init();
         });
 
-        let cells_item_row_count = Math.sqrt(this.size);
-        main.style.cssText = `grid-template-columns: repeat(${cells_item_row_count}, 1fr);
-                              grid-template-rows: repeat(${cells_item_row_count}, minmax(75px, auto));`;
+        const cellsItemRowCount = Math.sqrt(this.size);
+        main.style.cssText = `grid-template-columns: repeat(${cellsItemRowCount}, 1fr);
+                              grid-template-rows: repeat(${cellsItemRowCount}, minmax(75px, auto));`;
 
-        let time = document.createElement('div');
+        const time = document.createElement('div');
         time.classList.add('time');
         time.innerHTML = 'Время: ';
-        let minutes = document.createElement('span');
+        const minutes = document.createElement('span');
         minutes.classList.add('minutes');
         minutes.innerHTML = '00';
-        let separator = document.createElement('span');
+        const separator = document.createElement('span');
         separator.classList.add('separator');
         separator.innerHTML = ':';
-        let seconds = document.createElement('span');
+        const seconds = document.createElement('span');
         seconds.classList.add('seconds');
         seconds.innerHTML = '00';
 
@@ -72,35 +72,35 @@ const GemPuzzle = {
         time.appendChild(separator);
         time.appendChild(seconds);
 
-        let moves = document.createElement('div');
+        const moves = document.createElement('div');
         moves.classList.add('moves');
         moves.innerHTML = `Ходов: ${this.moves}`;
 
-        let menuBtn = document.createElement('a');
+        const menuBtn = document.createElement('a');
         menuBtn.classList.add('resolveBtn');
         menuBtn.innerHTML = 'Меню';
         menuBtn.addEventListener('click', this.openMenu);
 
-        let top_menu = document.createElement('div');
-        top_menu.classList.add('top_menu');
-        top_menu.appendChild(time);
-        top_menu.appendChild(moves);
-        top_menu.appendChild(menuBtn);
+        const topMenu = document.createElement('div');
+        topMenu.classList.add('top_menu');
+        topMenu.appendChild(time);
+        topMenu.appendChild(moves);
+        topMenu.appendChild(menuBtn);
 
-        let overlay = document.createElement('div');
+        const overlay = document.createElement('div');
         overlay.classList.add('overlay');
-        let game_menu_ul = document.createElement('ul');
-        game_menu_ul.classList.add('game_menu');
-        let menu_arr = ['Новая игра', 'Сохранить игру', 'Таблица рекордов'];
-        for (let i = 0; i < menu_arr.length; i++) {
-            let game_menu_li = document.createElement('li');
-            game_menu_li.innerHTML = menu_arr[i];
-            game_menu_ul.appendChild(game_menu_li);
+        const gameMenuUl = document.createElement('ul');
+        gameMenuUl.classList.add('game_menu');
+        const menuArr = ['Новая игра', 'Сохранить игру', 'Таблица рекордов'];
+        for (let i = 0; i < menuArr.length; i += 1) {
+            const gameMenuLi = document.createElement('li');
+            gameMenuLi.innerHTML = menuArr[i];
+            gameMenuUl.appendChild(gameMenuLi);
         }
 
-        let best_score = document.createElement('div');
-        best_score.classList.add('best_score');
-        best_score.innerHTML = '<h3>Таблица рекордов</h3>';
+        const bestScore = document.createElement('div');
+        bestScore.classList.add('best_score');
+        bestScore.innerHTML = '<h3>Таблица рекордов</h3>';
         let table = document.createElement('table');
         let row = table.insertRow(0);
 
@@ -114,68 +114,68 @@ const GemPuzzle = {
         cell3.innerHTML = 'Время';
         cell4.innerHTML = 'Размер поля';
 
-        let back_btn = document.createElement('a');
-        back_btn.innerHTML = 'Назад';
-        back_btn.classList.add('back_btn');
+        const backBtn = document.createElement('a');
+        backBtn.innerHTML = 'Назад';
+        backBtn.classList.add('back_btn');
 
-        best_score.appendChild(table);
-        best_score.appendChild(back_btn);
+        bestScore.appendChild(table);
+        bestScore.appendChild(backBtn);
         let n = 0;
-        back_btn.addEventListener('click', () => {
-            best_score.classList.toggle('visible');
+        backBtn.addEventListener('click', () => {
+            bestScore.classList.toggle('visible');
 
-            let date = new Date();
-            let date_day = date.getDay();
-            let date_month = date.getMonth();
-            let date_year = date.getFullYear();
-            let date_hour = date.getHours();
-            let date_minutes = date.getMinutes();
+            const date = new Date();
+            const dateDay = date.getDay();
+            const dateMonth = date.getMonth();
+            const dateYear = date.getFullYear();
+            const dateHour = date.getHours();
+            const dateMinutes = date.getMinutes();
 
-            let minutes = document.querySelector('.minutes').innerHTML;
-            let seconds = document.querySelector('.seconds').innerHTML;
+            const min = document.querySelector('.minutes').innerHTML;
+            const sec = document.querySelector('.seconds').innerHTML;
 
             this.winMovesArr[n] = [];
-            this.winMovesArr[n].date = `${date_day + 1}.${date_month + 1}.${date_year} ${date_hour}:${date_minutes}`;
+            this.winMovesArr[n].date = `${dateDay + 1}.${dateMonth + 1}.${dateYear} ${dateHour}:${dateMinutes}`;
             this.winMovesArr[n].moves = `${this.moves}`;
-            this.winMovesArr[n].time = `${minutes}:${seconds}`;
+            this.winMovesArr[n].time = `${min}:${sec}`;
             this.winMovesArr[n].size = `${Math.sqrt(this.size)}x${Math.sqrt(this.size)}`;
-            n++;
-            this.winMovesArr.sort(function (a, b) {
-                if (parseInt(a.moves) > parseInt(b.moves)) {
+            n += 1;
+            this.winMovesArr.sort((a, b) => {
+                if (parseInt(a.moves, 2) > parseInt(b.moves, 2)) {
                     return 1;
                 }
-                if (parseInt(a.moves) < parseInt(b.moves)) {
+                if (parseInt(a.moves, 2) < parseInt(b.moves, 2)) {
                     return -1;
                 }
                 return 0;
             });
-            let old_table = document.querySelector('table');
-            if (old_table) {
-                old_table.remove();
+            const oldTable = document.querySelector('table');
+            if (oldTable) {
+                oldTable.remove();
             }
 
-            let table = document.createElement('table');
-            let row = table.insertRow(0);
+            table = document.createElement('table');
+            row = table.insertRow(0);
 
-            let cell1 = row.insertCell(0);
-            let cell2 = row.insertCell(1);
-            let cell3 = row.insertCell(2);
-            let cell4 = row.insertCell(3);
+            cell1 = row.insertCell(0);
+            cell2 = row.insertCell(1);
+            cell3 = row.insertCell(2);
+            cell4 = row.insertCell(3);
 
             cell1.innerHTML = 'Дата';
             cell2.innerHTML = 'Ходов';
             cell3.innerHTML = 'Время';
             cell4.innerHTML = 'Размер поля';
 
-            best_score.insertBefore(table, back_btn);
+            bestScore.insertBefore(table, backBtn);
 
-            for (let i = 0; i < 10; i++) {
-                let row = table.insertRow(i + 1);
+            for (let i = 0; i < 10; i += 1) {
+                row = table.insertRow(i + 1);
 
-                let cell1 = row.insertCell(0);
-                let cell2 = row.insertCell(1);
-                let cell3 = row.insertCell(2);
-                let cell4 = row.insertCell(3);
+                cell1 = row.insertCell(0);
+                cell2 = row.insertCell(1);
+                cell3 = row.insertCell(2);
+                cell4 = row.insertCell(3);
 
                 cell1.innerHTML = this.winMovesArr[i].date;
                 cell2.innerHTML = this.winMovesArr[i].moves;
@@ -185,10 +185,10 @@ const GemPuzzle = {
             console.log(table.rows.length, this.winMovesArr);
         });
 
-        overlay.appendChild(game_menu_ul);
-        overlay.appendChild(best_score);
+        overlay.appendChild(gameMenuUl);
+        overlay.appendChild(bestScore);
 
-        let sound = document.createElement('div');
+        const sound = document.createElement('div');
         sound.classList.add('sound');
         sound.innerHTML = 'Выключить звук';
         sound.addEventListener('click', () => {
@@ -200,19 +200,19 @@ const GemPuzzle = {
             }
         });
 
-        for (let i = 0; i < this.size; i++) {
-            let cells_item = document.createElement('div');
-            cells_item.classList.add('cells_item');
-            cells_item.style.order = i + 1;
-            if (i == this.size - 1) {
-                cells_item.style.backgroundColor = 'transparent';
-                cells_item.style.border = 'none';
+        for (let i = 0; i < this.size; i += 1) {
+            const cellsItem = document.createElement('div');
+            cellsItem.classList.add('cells_item');
+            cellsItem.style.order = i + 1;
+            if (i === this.size - 1) {
+                cellsItem.style.backgroundColor = 'transparent';
+                cellsItem.style.border = 'none';
             }
-            cells_item.setAttribute('draggable', true);
-            main.appendChild(cells_item);
+            cellsItem.setAttribute('draggable', true);
+            main.appendChild(cellsItem);
         }
 
-        container.appendChild(top_menu);
+        container.appendChild(topMenu);
         main.appendChild(overlay);
         container.appendChild(main);
         container.appendChild(fieldSize);
@@ -229,57 +229,48 @@ const GemPuzzle = {
         if (localStorage.getItem('gameSave')) {
             this.arr = JSON.parse(localStorage.getItem('gameSave'));
         } else {
-            for (let i = 0; i < Math.sqrt(this.size); i++) {
+            for (let i = 0; i < Math.sqrt(this.size); i += 1) {
                 this.arr[i] = [];
-                for (let j = 0; j < Math.sqrt(this.size); j++) {
+                for (let j = 0; j < Math.sqrt(this.size); j += 1) {
                     this.arr[i][j] = (q + 1).toString();
-                    if (q == this.size - 1) {
+                    if (q === this.size - 1) {
                         this.arr[i][j] = '';
                     }
-                    q++;
+                    q += 1;
                 }
             }
 
             // присвоение конкретным полям значений массива
             q = 0;
-            for (let i = 0; i < Math.sqrt(this.size); i++) {
-                for (let j = 0; j < Math.sqrt(this.size); j++) {
+            for (let i = 0; i < Math.sqrt(this.size); i += 1) {
+                for (let j = 0; j < Math.sqrt(this.size); j += 1) {
                     this.cols[q].innerHTML = this.arr[i][j];
-                    if (q == this.size - 1) {
+                    if (q === this.size - 1) {
                         this.cols[q].dataset.empty = true;
                     }
-                    q++;
+                    q += 1;
                 }
             }
 
             // история ходов
-            let movesArr = [];
+            const movesArr = [];
             // перемешивание игрового поля
+            for (n = 0; n < 20; n += 1) {
+                const i = this.randomInteger(0, Math.sqrt(this.size) - 1);
+                const j = this.randomInteger(0, Math.sqrt(this.size) - 1);
+                this.checkNextEl(i, j, this.findEl(this.arr[i][j]));
 
-            function findEl(el) {
-                for (let i = 0; i < GemPuzzle.cols.length; i++) {
-                    if (GemPuzzle.cols[i].style.order == el) {
-                        return GemPuzzle.cols[i];
-                    }
-                }
+                // q = 0;
+                // movesArr[n] = [];
+                // for (let i = 0; i < Math.sqrt(this.size); i++) {
+                //     movesArr[n][i] = [];
+                //     for (let j = 0; j < Math.sqrt(this.size); j++) {
+                //         this.arr[i][j] = this.cols[q].innerHTML;
+                //         movesArr[n][i][j] = this.arr[i][j];
+                //         q++;
+                //     }
+                // }
             }
-
-            // for (let n = 0; n < 20; n++) {
-            //     let i = this.randomInteger(0, Math.sqrt(this.size) - 1);
-            //     let j = this.randomInteger(0, Math.sqrt(this.size) - 1);
-            //     this.checkNextEl(i, j, findEl(this.arr[i][j]));
-
-            //     // q = 0;
-            //     // movesArr[n] = [];
-            //     // for (let i = 0; i < Math.sqrt(this.size); i++) {
-            //     //     movesArr[n][i] = [];
-            //     //     for (let j = 0; j < Math.sqrt(this.size); j++) {
-            //     //         this.arr[i][j] = this.cols[q].innerHTML;
-            //     //         movesArr[n][i][j] = this.arr[i][j];
-            //     //         q++;
-            //     //     }
-            //     // }
-            // }
             this.moves = 0;
         }
 
@@ -295,30 +286,39 @@ const GemPuzzle = {
     },
 
     randomInteger(min, max) {
-        let rand = min + Math.random() * (max + 1 - min);
+        const rand = min + Math.random() * (max + 1 - min);
         return Math.floor(rand);
     },
 
+    findEl(el) {
+        for (let i = 0; i < GemPuzzle.cols.length; i += 1) {
+            if (GemPuzzle.cols[i].style.order === el) {
+                return GemPuzzle.cols[i];
+            }
+        }
+        return false;
+    },
+
     openMenu() {
-        let overlay = document.querySelector('.overlay');
+        const overlay = document.querySelector('.overlay');
         overlay.classList.toggle('visible');
 
-        let new_game_li = document.querySelector('li:first-child');
-        new_game_li.addEventListener('click', () => {
-            let container = document.querySelector('.container');
+        const newGameLi = document.querySelector('li:first-child');
+        newGameLi.addEventListener('click', () => {
+            const container = document.querySelector('.container');
             container.remove();
             GemPuzzle.init();
         });
 
-        let save_game_li = document.querySelector('li:nth-child(2)');
-        save_game_li.addEventListener('click', () => {
+        const saveGameLi = document.querySelector('li:nth-child(2)');
+        saveGameLi.addEventListener('click', () => {
             localStorage.setItem('gameSave', JSON.stringify(GemPuzzle.arr));
         });
 
-        let best_score_li = document.querySelector('li:nth-child(3)');
-        best_score_li.addEventListener('click', () => {
-            let best_score = document.querySelector('.best_score');
-            best_score.classList.toggle('visible');
+        const bestScoreLi = document.querySelector('li:nth-child(3)');
+        bestScoreLi.addEventListener('click', () => {
+            const bestScore = document.querySelector('.best_score');
+            bestScore.classList.toggle('visible');
         });
     },
 
@@ -327,19 +327,19 @@ const GemPuzzle = {
     time() {
         let sec = 0;
         function pad(val) {
-            return val > 9 ? val : '0' + val;
+            return val > 9 ? val : `0${val}`;
         }
-        let seconds = document.querySelector('.seconds');
-        let minutes = document.querySelector('.minutes');
-        setInterval(function () {
-            seconds.innerHTML = pad(++sec % 60);
+        const seconds = document.querySelector('.seconds');
+        const minutes = document.querySelector('.minutes');
+        setInterval(() => {
+            seconds.innerHTML = pad((sec += 1 % 60));
             minutes.innerHTML = pad(parseInt(sec / 60, 10));
         }, 1000);
     },
 
     incrementMoves() {
-        this.moves++;
-        let moves = document.querySelector('.moves');
+        this.moves += 1;
+        const moves = document.querySelector('.moves');
         moves.innerHTML = `Ходов: ${this.moves}`;
     },
 
@@ -353,7 +353,7 @@ const GemPuzzle = {
     handleDragEnd(e) {
         // удаляем класс со всех элементов
         e.target.style.opacity = 1;
-        [].forEach.call(this.cols, function (col) {
+        [].forEach.call(this.cols, (col) => {
             col.classList.remove('over');
         });
     },
@@ -383,73 +383,74 @@ const GemPuzzle = {
 
         // dragSrcEl - что перетянули
         // e.target - куда перетянули
-        let dragSrcEl_i = 0;
-        let dragSrcEl_j = 0;
-        for (let i = 0; i < this.arr.length; i++) {
-            if (this.arr[i].indexOf(this.dragSrcEl.innerHTML) != -1) {
-                let j = this.arr[i].indexOf(this.dragSrcEl.innerHTML);
-                dragSrcEl_i = i;
-                dragSrcEl_j = j;
+        let dragSrcElI = 0;
+        let dragSrcElJ = 0;
+        for (let i = 0; i < this.arr.length; i += 1) {
+            if (this.arr[i].indexOf(this.dragSrcEl.innerHTML) !== -1) {
+                const j = this.arr[i].indexOf(this.dragSrcEl.innerHTML);
+                dragSrcElI = i;
+                dragSrcElJ = j;
             }
         }
 
         // если подняли и опустили не один и тот же элемент
-        if (this.dragSrcEl != e.target) {
-            this.checkNextEl(dragSrcEl_i, dragSrcEl_j, this.dragSrcEl);
+        if (this.dragSrcEl !== e.target) {
+            this.checkNextEl(dragSrcElI, dragSrcElJ, this.dragSrcEl);
             this.moveSound();
         }
     },
 
     swapCell(target) {
         let posEmptyEl;
-        for (let i = 0; i < this.cols.length; i++) {
-            if (this.cols[i].dataset.empty == 'true') {
+        const trg = target;
+        for (let i = 0; i < this.cols.length; i += 1) {
+            if (this.cols[i].dataset.empty === 'true') {
                 posEmptyEl = i;
             }
         }
 
-        let temp = target.style.order;
-        target.style.order = this.cols[posEmptyEl].style.order;
+        const temp = trg.style.order;
+        trg.style.order = this.cols[posEmptyEl].style.order;
         this.cols[posEmptyEl].style.order = temp;
 
-        function rowPos(target) {
-            let rowPosition;
-            let size = Math.sqrt(GemPuzzle.size);
-            if (target.style.order % size == 0) {
-                rowPosition = Math.floor(target.style.order / size) - 1;
-            } else {
-                rowPosition = Math.floor(target.style.order / size);
-            }
-            return rowPosition;
+        this.arr[this.rowPos(this.cols[posEmptyEl])][this.colPos(this.cols[posEmptyEl])] = '';
+
+        this.arr[this.rowPos(target)][this.colPos(target)] = target.innerHTML;
+    },
+
+    rowPos(target) {
+        let rowPosition;
+        const size = Math.sqrt(GemPuzzle.size);
+        if (target.style.order % size === 0) {
+            rowPosition = Math.floor(target.style.order / size) - 1;
+        } else {
+            rowPosition = Math.floor(target.style.order / size);
         }
+        return rowPosition;
+    },
 
-        function colPos(target) {
-            let colPosition;
-            let size = Math.sqrt(GemPuzzle.size);
-            if (target.style.order % size == 0) {
-                colPosition = size;
-            } else {
-                colPosition = target.style.order % size;
-            }
-            return colPosition - 1;
+    colPos(target) {
+        let colPosition;
+        const size = Math.sqrt(GemPuzzle.size);
+        if (target.style.order % size === 0) {
+            colPosition = size;
+        } else {
+            colPosition = target.style.order % size;
         }
-
-        this.arr[rowPos(this.cols[posEmptyEl])][colPos(this.cols[posEmptyEl])] = '';
-
-        this.arr[rowPos(target)][colPos(target)] = target.innerHTML;
+        return colPosition - 1;
     },
 
     checkNextEl(i, j, target) {
-        if (i != this.arr.length - 1 && this.arr[i + 1][j] == '') {
+        if (i !== this.arr.length - 1 && this.arr[i + 1][j] === '') {
             this.swapCell(target);
             this.incrementMoves();
-        } else if (this.arr[i][j + 1] == '') {
+        } else if (this.arr[i][j + 1] === '') {
             this.swapCell(target);
             this.incrementMoves();
-        } else if (this.arr[i][j - 1] == '') {
+        } else if (this.arr[i][j - 1] === '') {
             this.swapCell(target);
             this.incrementMoves();
-        } else if (i != 0 && this.arr[i - 1][j] == '') {
+        } else if (i !== 0 && this.arr[i - 1][j] === '') {
             this.swapCell(target);
             this.incrementMoves();
         }
@@ -457,46 +458,46 @@ const GemPuzzle = {
 
     checkWin() {
         // выигрышная комбинация
-        let winArr = [];
+        const winArr = [];
         let q = 0;
-        for (let i = 0; i < this.arr.length; i++) {
+        for (let i = 0; i < this.arr.length; i += 1) {
             winArr[i] = [];
-            for (let j = 0; j < this.arr.length; j++) {
+            for (let j = 0; j < this.arr.length; j += 1) {
                 winArr[i][j] = (q + 1).toString();
-                if (q == this.size - 1) {
+                if (q === this.size - 1) {
                     winArr[i][j] = '';
                 }
-                q++;
+                q += 1;
             }
         }
 
         let isWin = true;
-        for (let i = 0; i < this.arr.length; i++) {
-            for (let j = 0; j < this.arr.length; j++) {
-                if (this.arr[i][j] != winArr[i][j]) {
+        for (let i = 0; i < this.arr.length; i += 1) {
+            for (let j = 0; j < this.arr.length; j += 1) {
+                if (this.arr[i][j] !== winArr[i][j]) {
                     isWin = false;
                 }
             }
         }
 
-        if (isWin == true) {
-            let minutes = document.querySelector('.minutes').innerHTML;
-            let seconds = document.querySelector('.seconds').innerHTML;
+        if (isWin === true) {
+            const minutes = document.querySelector('.minutes').innerHTML;
+            const seconds = document.querySelector('.seconds').innerHTML;
             alert(`Ура! Вы решили головоломку за ${minutes}:${seconds} и ${this.moves} ходов`);
         }
     },
 
     moveSound() {
         if (this.isSound) {
-            let sound = new Audio(movesound);
+            const sound = new Audio(movesound);
             sound.play();
         }
     },
 
     handleClick(e) {
-        for (let i = 0; i < this.arr.length; i++) {
-            if (this.arr[i].indexOf(e.target.innerHTML) != -1) {
-                let j = this.arr[i].indexOf(e.target.innerHTML);
+        for (let i = 0; i < this.arr.length; i += 1) {
+            if (this.arr[i].indexOf(e.target.innerHTML) !== -1) {
+                const j = this.arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
                 this.checkNextEl(i, j, e.target);
                 this.checkWin();
