@@ -15,6 +15,7 @@
     }
     .cells_items {
         display: grid;
+        transition: 2s;
         justify-content: center;
         position: relative;
         background-color: cornflowerblue;
