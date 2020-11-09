@@ -2,7 +2,7 @@ import './assets/scss/main.scss';
 import movesound from './assets/sounds/move.mp3';
 
 const GemPuzzle = {
-    size: 16,
+    size: 9,
     selIndex: 1,
     moves: 0,
     isSound: true,
@@ -10,6 +10,7 @@ const GemPuzzle = {
     cols: null,
     dragSrcEl: null,
     winMovesArr: [],
+    bgNum: null,
 
     init() {
         let container = document.createElement('div');
@@ -52,8 +53,8 @@ const GemPuzzle = {
         });
 
         const cellsItemRowCount = Math.sqrt(this.size);
-        main.style.cssText = `grid-template-columns: repeat(${cellsItemRowCount}, 1fr);
-                              grid-template-rows: repeat(${cellsItemRowCount}, minmax(75px, auto));`;
+        main.style.cssText = `grid-template-columns: repeat(${cellsItemRowCount}, minmax(20px, 120px));
+                              grid-template-rows: repeat(${cellsItemRowCount}, minmax(30px, 60px));`;
 
         const time = document.createElement('div');
         time.classList.add('time');
@@ -200,6 +201,10 @@ const GemPuzzle = {
             }
         });
 
+        let j = 0;
+        if (this.bgNum === null) {
+            this.bgNum = this.randomInteger(1, 150);
+        }
         for (let i = 0; i < this.size; i += 1) {
             const cellsItem = document.createElement('div');
             cellsItem.classList.add('cells_item');
@@ -209,6 +214,7 @@ const GemPuzzle = {
                 cellsItem.style.border = 'none';
             }
             cellsItem.setAttribute('draggable', true);
+            cellsItem.style.background = `url(./assets/img/${this.bgNum}.jpg)`;
             main.appendChild(cellsItem);
         }
 
@@ -219,6 +225,20 @@ const GemPuzzle = {
         container.appendChild(sound);
 
         document.body.appendChild(container);
+
+        let elHeight = document.querySelector('.cells_item').offsetWidth;
+
+        main.style.cssText = `grid-template-columns: repeat(${cellsItemRowCount}, minmax(20px, 120px));
+        grid-template-rows: repeat(${cellsItemRowCount}, ${elHeight}px);`;
+
+        let k = 0;
+        let cellsItem = document.querySelectorAll('.cells_item');
+        for (let i = 0; i < Math.sqrt(this.size); i++) {
+            for (let j = 0; j < Math.sqrt(this.size); j++) {
+                cellsItem[k].style.backgroundPosition = 900 - j * elHeight + 'px ' + (900 - i * elHeight) + 'px';
+                k++;
+            }
+        }
 
         this.time();
 
