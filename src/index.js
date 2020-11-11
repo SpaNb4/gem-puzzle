@@ -1,8 +1,10 @@
 import './assets/scss/main.scss';
 import movesound from './assets/sounds/move.mp3';
+import * as drag from './drag_drop.js';
+import * as swap from './swap.js';
 
 const GemPuzzle = {
-    size: 9,
+    size: 16,
     selIndex: 1,
     moves: 0,
     isSound: true,
@@ -72,9 +74,7 @@ const GemPuzzle = {
         seconds.classList.add('seconds');
         seconds.innerHTML = '00';
 
-        time.appendChild(minutes);
-        time.appendChild(separator);
-        time.appendChild(seconds);
+        time.append(minutes, separator, seconds);
 
         const moves = document.createElement('div');
         moves.classList.add('moves');
@@ -83,13 +83,11 @@ const GemPuzzle = {
         const menuBtn = document.createElement('a');
         menuBtn.classList.add('resolveBtn');
         menuBtn.innerHTML = 'Меню';
-        menuBtn.addEventListener('click', this.openMenu);
+        menuBtn.addEventListener('click', this.openMenu.bind(this));
 
         const topMenu = document.createElement('div');
         topMenu.classList.add('top_menu');
-        topMenu.appendChild(time);
-        topMenu.appendChild(moves);
-        topMenu.appendChild(menuBtn);
+        topMenu.append(time, moves, menuBtn);
 
         const overlay = document.createElement('div');
         overlay.classList.add('overlay');
@@ -122,15 +120,13 @@ const GemPuzzle = {
         backBtn.innerHTML = 'Назад';
         backBtn.classList.add('back_btn');
 
-        bestScore.appendChild(table);
-        bestScore.appendChild(backBtn);
+        bestScore.append(table, backBtn);
 
         backBtn.addEventListener('click', () => {
             bestScore.classList.toggle('visible');
         });
 
-        overlay.appendChild(gameMenuUl);
-        overlay.appendChild(bestScore);
+        overlay.append(gameMenuUl, bestScore);
 
         const sound = document.createElement('div');
         sound.classList.add('sound');
@@ -148,8 +144,7 @@ const GemPuzzle = {
         solve.classList.add('solve');
         solve.innerHTML = 'Решить';
         solve.addEventListener('click', () => {
-            this.interval = setInterval(this.solvePuzzle, 500);
-            this.interval;
+            this.interval = setInterval(this.solvePuzzle.bind(this), 500);
         });
 
         let j = 0;
@@ -171,10 +166,7 @@ const GemPuzzle = {
 
         container.appendChild(topMenu);
         main.appendChild(overlay);
-        container.appendChild(main);
-        container.appendChild(fieldSize);
-        container.appendChild(sound);
-        container.appendChild(solve);
+        container.append(main, fieldSize, sound, solve);
 
         document.body.appendChild(container);
 
@@ -225,24 +217,23 @@ const GemPuzzle = {
             }
 
             // перемешивание игрового поля
+            let isRandom = true;
             for (let n = 1; n < 100; n += 1) {
                 const i = this.randomInteger(0, Math.sqrt(this.size) - 1);
                 const j = this.randomInteger(0, Math.sqrt(this.size) - 1);
-                this.checkNextEl(i, j, this.findEl(this.arr[i][j]));
+                swap.checkNextEl.call(this, i, j, this.findEl(this.arr[i][j]), isRandom);
             }
-
             this.movesArr.pop();
-            this.moves = 0;
         }
 
-        [].forEach.call(this.cols, (col) => {
-            col.addEventListener('dragstart', this.handleDragStart.bind(GemPuzzle));
-            col.addEventListener('dragenter', this.handleDragEnter);
-            col.addEventListener('dragover', this.handleDragOver);
-            col.addEventListener('dragleave', this.handleDragLeave);
-            col.addEventListener('drop', this.handleDrop.bind(GemPuzzle));
-            col.addEventListener('dragend', this.handleDragEnd.bind(GemPuzzle));
-            col.addEventListener('click', this.handleClick.bind(GemPuzzle));
+        this.cols.forEach( (col) => {
+            col.addEventListener('dragstart', drag.handleDragStart.bind(this));
+            col.addEventListener('dragenter', drag.handleDragEnter);
+            col.addEventListener('dragover', drag.handleDragOver);
+            col.addEventListener('dragleave', drag.handleDragLeave);
+            col.addEventListener('drop', drag.handleDrop.bind(this));
+            col.addEventListener('dragend', drag.handleDragEnd.bind(this));
+            col.addEventListener('click', this.handleClick.bind(this));
         });
     },
 
@@ -252,9 +243,9 @@ const GemPuzzle = {
     },
 
     findEl(el) {
-        for (let i = 0; i < GemPuzzle.cols.length; i += 1) {
-            if (GemPuzzle.cols[i].innerHTML == el) {
-                return GemPuzzle.cols[i];
+        for (let i = 0; i < this.cols.length; i += 1) {
+            if (this.cols[i].innerHTML == el) {
+                return this.cols[i];
             }
         }
         return false;
@@ -268,12 +259,13 @@ const GemPuzzle = {
         newGameLi.addEventListener('click', () => {
             const container = document.querySelector('.container');
             container.remove();
-            GemPuzzle.init();
+            this.moves = 0;
+            this.init();
         });
 
         const saveGameLi = document.querySelector('li:nth-child(2)');
         saveGameLi.addEventListener('click', () => {
-            localStorage.setItem('gameSave', JSON.stringify(GemPuzzle.arr));
+            localStorage.setItem('gameSave', JSON.stringify(this.arr));
         });
 
         const bestScoreLi = document.querySelector('li:nth-child(3)');
@@ -287,14 +279,14 @@ const GemPuzzle = {
         let _i = 0;
         let _j = 0;
 
-        if (GemPuzzle.movesArr == 0) {
+        if (this.movesArr == 0) {
             clearTimeout(this.interval);
         } else {
-            _i = GemPuzzle.movesArr[GemPuzzle.movesArr.length - 1][0];
-            _j = GemPuzzle.movesArr[GemPuzzle.movesArr.length - 1][1];
-            console.log(_i, _j);
-            GemPuzzle.checkNextEl(_i, _j, GemPuzzle.findEl(GemPuzzle.arr[_i][_j]));
-            GemPuzzle.movesArr.pop();
+            _i = this.movesArr[this.movesArr.length - 1][0];
+            _j = this.movesArr[this.movesArr.length - 1][1];
+
+            swap.checkNextEl.call(this, _i, _j, this.findEl.bind(this, this.arr[_i][_j]));
+            this.movesArr.pop();
         }
     },
 
@@ -315,123 +307,6 @@ const GemPuzzle = {
         this.moves += 1;
         const moves = document.querySelector('.moves');
         moves.innerHTML = `Ходов: ${this.moves}`;
-    },
-
-    handleDragStart(e) {
-        e.target.style.opacity = '0.4';
-        this.dragSrcEl = e.target;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', e.target.innerHTML);
-    },
-
-    handleDragEnd(e) {
-        // удаляем класс со всех элементов
-        e.target.style.opacity = 1;
-        [].forEach.call(this.cols, (col) => {
-            col.classList.remove('over');
-        });
-    },
-
-    handleDragOver(e) {
-        if (e.preventDefault) {
-            e.preventDefault();
-        }
-        e.dataTransfer.dropEffect = 'move';
-        return false;
-    },
-
-    handleDragEnter() {
-        // добавляем класс для текущего элемента
-        this.classList.add('over');
-    },
-
-    handleDragLeave() {
-        // удаляем класс с предыдущего элемента
-        this.classList.remove('over');
-    },
-
-    handleDrop(e) {
-        if (e.stopPropagation) {
-            e.stopPropagation();
-        }
-
-        // dragSrcEl - что перетянули
-        // e.target - куда перетянули
-        let dragSrcElI = 0;
-        let dragSrcElJ = 0;
-        for (let i = 0; i < this.arr.length; i += 1) {
-            if (this.arr[i].indexOf(this.dragSrcEl.innerHTML) !== -1) {
-                const j = this.arr[i].indexOf(this.dragSrcEl.innerHTML);
-                dragSrcElI = i;
-                dragSrcElJ = j;
-            }
-        }
-
-        // если подняли и опустили не один и тот же элемент
-        if (this.dragSrcEl !== e.target) {
-            this.checkNextEl(dragSrcElI, dragSrcElJ, this.dragSrcEl);
-            this.moveSound();
-        }
-    },
-
-    swapCell(target, _i, _j) {
-        let posEmptyEl;
-        const trg = target;
-
-        posEmptyEl = this.size - 1;
-
-        const temp = trg.style.order;
-        trg.style.order = this.cols[posEmptyEl].style.order;
-        this.cols[posEmptyEl].style.order = temp;
-
-        this.arr[this.rowPos(this.cols[posEmptyEl])][this.colPos(this.cols[posEmptyEl])] = '';
-
-        this.arr[this.rowPos(target)][this.colPos(target)] = target.innerHTML;
-
-        if (this.movesArr.length == 0) {
-            this.movesArr.push([Math.sqrt(this.size) - 1, Math.sqrt(this.size) - 1]);
-        }
-        if (target.innerHTML !== '') {
-            this.movesArr.push([_i, _j]);
-        }
-    },
-
-    rowPos(target) {
-        let rowPosition;
-        const size = Math.sqrt(GemPuzzle.size);
-        if (target.style.order % size === 0) {
-            rowPosition = Math.floor(target.style.order / size) - 1;
-        } else {
-            rowPosition = Math.floor(target.style.order / size);
-        }
-        return rowPosition;
-    },
-
-    colPos(target) {
-        let colPosition;
-        const size = Math.sqrt(GemPuzzle.size);
-        if (target.style.order % size === 0) {
-            colPosition = size;
-        } else {
-            colPosition = target.style.order % size;
-        }
-        return colPosition - 1;
-    },
-
-    checkNextEl(i, j, target) {
-        if (i !== this.arr.length - 1 && this.arr[i + 1][j] === '') {
-            this.swapCell(target, i, j);
-            this.incrementMoves();
-        } else if (this.arr[i][j + 1] === '') {
-            this.swapCell(target, i, j);
-            this.incrementMoves();
-        } else if (this.arr[i][j - 1] === '') {
-            this.swapCell(target, i, j);
-            this.incrementMoves();
-        } else if (i !== 0 && this.arr[i - 1][j] === '') {
-            this.swapCell(target, i, j);
-            this.incrementMoves();
-        }
     },
 
     checkWin() {
@@ -541,7 +416,7 @@ const GemPuzzle = {
             if (this.arr[i].indexOf(e.target.innerHTML) !== -1) {
                 const j = this.arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
-                this.checkNextEl(i, j, e.target);
+                swap.checkNextEl.call(this, i, j, e.target);
                 this.checkWin();
                 this.moveSound();
                 break;

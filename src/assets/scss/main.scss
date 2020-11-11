@@ -21,11 +21,12 @@
         background-color: cornflowerblue;
         padding: 5px;
         border-radius: 10px;
-        grid-gap: 10px;
+        grid-gap: 5px;
         .cells_item {
             display: flex;
             justify-content: center;
             align-items: center;
+            color: #ffffff;
             background-color: #b3aeae;
             font-family: 'Courier New', Courier, monospace;
             font-size: 24px;
