@@ -9,6 +9,7 @@ const GemPuzzle = {
     moves: 0,
     isSound: true,
     isPause: false,
+    isWin: false,
     currTime: 0,
     arr: [],
     movesArr: [],
@@ -205,8 +206,13 @@ const GemPuzzle = {
         this.cols = document.querySelectorAll('.cells_item');
         let q = 0;
         if (localStorage.getItem('gameSave')) {
-            console.log(JSON.parse(localStorage.getItem('gameSave')).arr.arr);
-            this.arr = JSON.parse(localStorage.getItem('gameSave')).arr.arr.arr;
+            let saveData = JSON.parse(localStorage.getItem('gameSave')).arr;
+            this.arr = saveData.arr;
+            this.currTime = saveData.currTime;
+            this.moves = saveData.moves;
+            const moves = document.querySelector('.moves');
+            moves.innerHTML = `Ходов: ${this.moves}`;
+            this.movesArr = saveData.movesArr;
             this.colsSet();
         } else {
             for (let i = 0; i < Math.sqrt(this.size); i += 1) {
@@ -228,18 +234,25 @@ const GemPuzzle = {
                 swap.checkNextEl.call(this, i, j, this.findEl(this.arr[i][j]), isRandom);
             }
         }
-
+        this.getTime();
         this.movesArr.pop();
     },
 
     colsSet() {
         let q = 0;
+        for (let i = 0; i < this.cols.length; i++) {
+            this.cols[q].innerHTML = q + 1;
+            if (q == this.size - 1) {
+                this.cols[q].innerHTML = '';
+                this.cols[q].dataset.empty = true;
+            }
+            q++;
+        }
+        q = 0;
+        let n = 0;
         for (let i = 0; i < Math.sqrt(this.size); i += 1) {
             for (let j = 0; j < Math.sqrt(this.size); j += 1) {
-                this.cols[q].innerHTML = this.arr[i][j];
-                if (q === this.size - 1) {
-                    this.cols[q].dataset.empty = true;
-                }
+                this.findEl(this.arr[i][j]).style.order = q + 1;
                 q += 1;
             }
         }
@@ -261,6 +274,7 @@ const GemPuzzle = {
 
     openMenu() {
         this.isPause = !this.isPause;
+        this.getTime();
         const overlay = document.querySelector('.overlay');
         overlay.classList.toggle('visible');
 
@@ -268,6 +282,7 @@ const GemPuzzle = {
         newGameLi.addEventListener('click', () => {
             const container = document.querySelector('.container');
             container.remove();
+            localStorage.removeItem('gameSave');
             this.moves = 0;
             this.init();
         });
@@ -288,7 +303,7 @@ const GemPuzzle = {
         let _i = 0;
         let _j = 0;
 
-        if (this.movesArr == 0) {
+        if (this.movesArr == 0 || this.isWin) {
             clearTimeout(this.interval);
         } else {
             _i = this.movesArr[this.movesArr.length - 1][0];
@@ -307,10 +322,11 @@ const GemPuzzle = {
         const minutes = document.querySelector('.minutes');
 
         let timeInterval = setInterval(() => {
-            seconds.innerHTML = pad(++this.currTime % 60);
-            minutes.innerHTML = pad(parseInt(this.currTime / 60, 10));
             if (this.isPause) {
                 clearInterval(timeInterval);
+            } else {
+                seconds.innerHTML = pad(++this.currTime % 60);
+                minutes.innerHTML = pad(parseInt(this.currTime / 60, 10));
             }
         }, 1000);
     },
@@ -321,98 +337,73 @@ const GemPuzzle = {
         moves.innerHTML = `Ходов: ${this.moves}`;
     },
 
-    checkWin() {
-        // выигрышная комбинация
-        const winArr = [];
-        let q = 0;
-        for (let i = 0; i < this.arr.length; i += 1) {
-            winArr[i] = [];
-            for (let j = 0; j < this.arr.length; j += 1) {
-                winArr[i][j] = (q + 1).toString();
-                if (q === this.size - 1) {
-                    winArr[i][j] = '';
-                }
-                q += 1;
+    addResToScore() {
+        const minutes = document.querySelector('.minutes').innerHTML;
+        const seconds = document.querySelector('.seconds').innerHTML;
+        alert(`Ура! Вы решили головоломку за ${minutes}:${seconds} и ${this.moves} ходов`);
+
+        const date = new Date();
+        const dateDay = date.getDay();
+        const dateMonth = date.getMonth();
+        const dateYear = date.getFullYear();
+        const dateHour = date.getHours();
+        const dateMinutes = date.getMinutes();
+
+        const min = document.querySelector('.minutes').innerHTML;
+        const sec = document.querySelector('.seconds').innerHTML;
+
+        this.winMovesArr[this.bestScorePos] = [];
+        this.winMovesArr[this.bestScorePos].date = `${dateDay + 1}.${dateMonth + 1}.${dateYear} ${dateHour}:${dateMinutes}`;
+        this.winMovesArr[this.bestScorePos].moves = `${this.moves}`;
+        this.winMovesArr[this.bestScorePos].time = `${min}:${sec}`;
+        this.winMovesArr[this.bestScorePos].size = `${Math.sqrt(this.size)}x${Math.sqrt(this.size)}`;
+
+        this.bestScorePos += 1;
+        this.winMovesArr.sort((a, b) => {
+            if (parseInt(a.moves) > parseInt(b.moves)) {
+                return 1;
             }
+            if (parseInt(a.moves) < parseInt(b.moves)) {
+                return -1;
+            }
+            return 0;
+        });
+        const oldTable = document.querySelector('table');
+        if (oldTable) {
+            oldTable.remove();
         }
 
-        let isWin = true;
-        for (let i = 0; i < this.arr.length; i += 1) {
-            for (let j = 0; j < this.arr.length; j += 1) {
-                if (this.arr[i][j] !== winArr[i][j]) {
-                    isWin = false;
-                }
-            }
-        }
+        let table = document.createElement('table');
+        let row = table.insertRow(0);
 
-        if (isWin === true) {
-            const minutes = document.querySelector('.minutes').innerHTML;
-            const seconds = document.querySelector('.seconds').innerHTML;
-            alert(`Ура! Вы решили головоломку за ${minutes}:${seconds} и ${this.moves} ходов`);
+        let cell1 = row.insertCell(0);
+        let cell2 = row.insertCell(1);
+        let cell3 = row.insertCell(2);
+        let cell4 = row.insertCell(3);
 
-            const date = new Date();
-            const dateDay = date.getDay();
-            const dateMonth = date.getMonth();
-            const dateYear = date.getFullYear();
-            const dateHour = date.getHours();
-            const dateMinutes = date.getMinutes();
+        cell1.innerHTML = 'Дата';
+        cell2.innerHTML = 'Ходов';
+        cell3.innerHTML = 'Время';
+        cell4.innerHTML = 'Размер поля';
 
-            const min = document.querySelector('.minutes').innerHTML;
-            const sec = document.querySelector('.seconds').innerHTML;
+        let bestScore = document.querySelector('.best_score');
+        let backBtn = document.querySelector('.back_btn');
+        bestScore.insertBefore(table, backBtn);
 
-            this.winMovesArr[this.bestScorePos] = [];
-            this.winMovesArr[this.bestScorePos].date = `${dateDay + 1}.${dateMonth + 1}.${dateYear} ${dateHour}:${dateMinutes}`;
-            this.winMovesArr[this.bestScorePos].moves = `${this.moves}`;
-            this.winMovesArr[this.bestScorePos].time = `${min}:${sec}`;
-            this.winMovesArr[this.bestScorePos].size = `${Math.sqrt(this.size)}x${Math.sqrt(this.size)}`;
+        for (let i = 0; i < 10; i += 1) {
+            row = table.insertRow(i + 1);
 
-            this.bestScorePos += 1;
-            this.winMovesArr.sort((a, b) => {
-                if (parseInt(a.moves) > parseInt(b.moves)) {
-                    return 1;
-                }
-                if (parseInt(a.moves) < parseInt(b.moves)) {
-                    return -1;
-                }
-                return 0;
-            });
-            const oldTable = document.querySelector('table');
-            if (oldTable) {
-                oldTable.remove();
-            }
+            cell1 = row.insertCell(0);
+            cell2 = row.insertCell(1);
+            cell3 = row.insertCell(2);
+            cell4 = row.insertCell(3);
 
-            let table = document.createElement('table');
-            let row = table.insertRow(0);
-
-            let cell1 = row.insertCell(0);
-            let cell2 = row.insertCell(1);
-            let cell3 = row.insertCell(2);
-            let cell4 = row.insertCell(3);
-
-            cell1.innerHTML = 'Дата';
-            cell2.innerHTML = 'Ходов';
-            cell3.innerHTML = 'Время';
-            cell4.innerHTML = 'Размер поля';
-
-            let bestScore = document.querySelector('.best_score');
-            let backBtn = document.querySelector('.back_btn');
-            bestScore.insertBefore(table, backBtn);
-
-            for (let i = 0; i < 10; i += 1) {
-                row = table.insertRow(i + 1);
-
-                cell1 = row.insertCell(0);
-                cell2 = row.insertCell(1);
-                cell3 = row.insertCell(2);
-                cell4 = row.insertCell(3);
-
-                try {
-                    cell1.innerHTML = this.winMovesArr[i].date;
-                    cell2.innerHTML = this.winMovesArr[i].moves;
-                    cell3.innerHTML = this.winMovesArr[i].time;
-                    cell4.innerHTML = this.winMovesArr[i].size;
-                } catch {}
-            }
+            try {
+                cell1.innerHTML = this.winMovesArr[i].date;
+                cell2.innerHTML = this.winMovesArr[i].moves;
+                cell3.innerHTML = this.winMovesArr[i].time;
+                cell4.innerHTML = this.winMovesArr[i].size;
+            } catch {}
         }
     },
 
@@ -429,9 +420,6 @@ const GemPuzzle = {
                 const j = this.arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
                 swap.checkNextEl.call(this, i, j, e.target);
-                this.checkWin();
-                this.moveSound();
-                this.getTime();
                 break;
             }
         }
