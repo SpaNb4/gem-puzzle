@@ -8,6 +8,8 @@ const GemPuzzle = {
     selIndex: 1,
     moves: 0,
     isSound: true,
+    isPause: false,
+    currTime: 0,
     arr: [],
     movesArr: [],
     cols: null,
@@ -184,14 +186,28 @@ const GemPuzzle = {
             }
         }
 
-        this.time();
+        this.fieldFill();
 
+        this.cols.forEach((col) => {
+            col.addEventListener('dragstart', drag.handleDragStart.bind(this));
+            col.addEventListener('dragenter', drag.handleDragEnter);
+            col.addEventListener('dragover', drag.handleDragOver);
+            col.addEventListener('dragleave', drag.handleDragLeave);
+            col.addEventListener('drop', drag.handleDrop.bind(this));
+            col.addEventListener('dragend', drag.handleDragEnd.bind(this));
+            col.addEventListener('click', this.handleClick.bind(this));
+        });
+    },
+
+    fieldFill() {
         // заполнение массива числами от 1 до size-1
         // загрузка сохранённой игры из localstorage
         this.cols = document.querySelectorAll('.cells_item');
         let q = 0;
         if (localStorage.getItem('gameSave')) {
-            this.arr = JSON.parse(localStorage.getItem('gameSave'));
+            console.log(JSON.parse(localStorage.getItem('gameSave')).arr.arr);
+            this.arr = JSON.parse(localStorage.getItem('gameSave')).arr.arr.arr;
+            this.colsSet();
         } else {
             for (let i = 0; i < Math.sqrt(this.size); i += 1) {
                 this.arr[i] = [];
@@ -203,19 +219,7 @@ const GemPuzzle = {
                     q += 1;
                 }
             }
-
-            // присвоение конкретным полям значений массива
-            q = 0;
-            for (let i = 0; i < Math.sqrt(this.size); i += 1) {
-                for (let j = 0; j < Math.sqrt(this.size); j += 1) {
-                    this.cols[q].innerHTML = this.arr[i][j];
-                    if (q === this.size - 1) {
-                        this.cols[q].dataset.empty = true;
-                    }
-                    q += 1;
-                }
-            }
-
+            this.colsSet();
             // перемешивание игрового поля
             let isRandom = true;
             for (let n = 1; n < 100; n += 1) {
@@ -223,18 +227,22 @@ const GemPuzzle = {
                 const j = this.randomInteger(0, Math.sqrt(this.size) - 1);
                 swap.checkNextEl.call(this, i, j, this.findEl(this.arr[i][j]), isRandom);
             }
-            this.movesArr.pop();
         }
 
-        this.cols.forEach( (col) => {
-            col.addEventListener('dragstart', drag.handleDragStart.bind(this));
-            col.addEventListener('dragenter', drag.handleDragEnter);
-            col.addEventListener('dragover', drag.handleDragOver);
-            col.addEventListener('dragleave', drag.handleDragLeave);
-            col.addEventListener('drop', drag.handleDrop.bind(this));
-            col.addEventListener('dragend', drag.handleDragEnd.bind(this));
-            col.addEventListener('click', this.handleClick.bind(this));
-        });
+        this.movesArr.pop();
+    },
+
+    colsSet() {
+        let q = 0;
+        for (let i = 0; i < Math.sqrt(this.size); i += 1) {
+            for (let j = 0; j < Math.sqrt(this.size); j += 1) {
+                this.cols[q].innerHTML = this.arr[i][j];
+                if (q === this.size - 1) {
+                    this.cols[q].dataset.empty = true;
+                }
+                q += 1;
+            }
+        }
     },
 
     randomInteger(min, max) {
@@ -252,6 +260,7 @@ const GemPuzzle = {
     },
 
     openMenu() {
+        this.isPause = !this.isPause;
         const overlay = document.querySelector('.overlay');
         overlay.classList.toggle('visible');
 
@@ -265,7 +274,7 @@ const GemPuzzle = {
 
         const saveGameLi = document.querySelector('li:nth-child(2)');
         saveGameLi.addEventListener('click', () => {
-            localStorage.setItem('gameSave', JSON.stringify(this.arr));
+            localStorage.setItem('gameSave', JSON.stringify({ arr: this }));
         });
 
         const bestScoreLi = document.querySelector('li:nth-child(3)');
@@ -285,21 +294,24 @@ const GemPuzzle = {
             _i = this.movesArr[this.movesArr.length - 1][0];
             _j = this.movesArr[this.movesArr.length - 1][1];
 
-            swap.checkNextEl.call(this, _i, _j, this.findEl.bind(this, this.arr[_i][_j]));
+            swap.checkNextEl.call(this, _i, _j, this.findEl(this.arr[_i][_j]));
             this.movesArr.pop();
         }
     },
 
-    time() {
-        let sec = 0;
+    getTime() {
         function pad(val) {
             return val > 9 ? val : `0${val}`;
         }
         const seconds = document.querySelector('.seconds');
         const minutes = document.querySelector('.minutes');
-        setInterval(() => {
-            seconds.innerHTML = pad(++sec % 60);
-            minutes.innerHTML = pad(parseInt(sec / 60, 10));
+
+        let timeInterval = setInterval(() => {
+            seconds.innerHTML = pad(++this.currTime % 60);
+            minutes.innerHTML = pad(parseInt(this.currTime / 60, 10));
+            if (this.isPause) {
+                clearInterval(timeInterval);
+            }
         }, 1000);
     },
 
@@ -419,6 +431,7 @@ const GemPuzzle = {
                 swap.checkNextEl.call(this, i, j, e.target);
                 this.checkWin();
                 this.moveSound();
+                this.getTime();
                 break;
             }
         }
