@@ -16,7 +16,6 @@ const GemPuzzle = {
     cols: null,
     dragSrcEl: null,
     winMovesArr: [],
-    bestScorePos: 0,
     interval: null,
     timeInterval: null,
     bgNum: null,
@@ -54,13 +53,8 @@ const GemPuzzle = {
 
         fieldSize.selectedIndex = this.selIndex;
         fieldSize.addEventListener('change', () => {
-            container = document.querySelector('.container');
             this.selIndex = fieldSize.options.selectedIndex;
-            container.remove();
-            this.arr = [];
-            this.currTime = 0;
-            clearInterval(this.timeInterval);
-            this.init();
+            this.clearField();
         });
 
         const cellsItemRowCount = Math.sqrt(this.size);
@@ -69,18 +63,10 @@ const GemPuzzle = {
 
         const time = document.createElement('div');
         time.classList.add('time');
-        time.innerHTML = '<i class="material-icons">alarm</i>';
-        const minutes = document.createElement('span');
-        minutes.classList.add('minutes');
-        minutes.innerHTML = '00';
-        const separator = document.createElement('span');
-        separator.classList.add('separator');
-        separator.innerHTML = ':';
-        const seconds = document.createElement('span');
-        seconds.classList.add('seconds');
-        seconds.innerHTML = '00';
-
-        time.append(minutes, separator, seconds);
+        time.innerHTML = `<i class="material-icons">alarm</i>
+                        <span class='minutes'>00</span>
+                        <span class='separator'>:</span>
+                        <span class='seconds'>00</span>`;
 
         const moves = document.createElement('div');
         moves.classList.add('moves');
@@ -123,8 +109,8 @@ const GemPuzzle = {
         cell4.innerHTML = 'Размер поля';
 
         const backBtn = document.createElement('a');
-        backBtn.innerHTML = 'Назад';
         backBtn.classList.add('back_btn');
+        backBtn.innerHTML = 'Назад';
 
         bestScore.append(table, backBtn);
 
@@ -150,7 +136,7 @@ const GemPuzzle = {
         solve.classList.add('solve');
         solve.innerHTML = '<i class="material-icons">last_page</i>';
         solve.addEventListener('click', () => {
-            this.interval = setInterval(this.solvePuzzle.bind(this), 500);
+            this.interval = setInterval(this.solvePuzzle.bind(this), 200);
         });
 
         const bottomMenu = document.createElement('div');
@@ -182,6 +168,12 @@ const GemPuzzle = {
 
         document.body.appendChild(container);
 
+        if (localStorage.getItem('bestScore')) {
+            this.winMovesArr = JSON.parse(localStorage.getItem('bestScore'));
+            this.addResToScore();
+        } else {
+        }
+
         const elHeight = document.querySelector('.cells_item').offsetWidth;
 
         main.style.cssText = `grid-template-columns: repeat(${cellsItemRowCount}, minmax(20px, 120px));
@@ -207,6 +199,17 @@ const GemPuzzle = {
             col.addEventListener('dragend', drag.handleDragEnd.bind(this));
             col.addEventListener('click', this.handleClick.bind(this));
         });
+    },
+
+    clearField() {
+        const container = document.querySelector('.container');
+        container.remove();
+        this.arr = [];
+        this.currTime = 0;
+        this.movesArr = [];
+        this.moves = 0;
+        clearInterval(this.timeInterval);
+        this.init();
     },
 
     fieldFill() {
@@ -302,11 +305,9 @@ const GemPuzzle = {
 
         const newGameLi = document.querySelector('li:first-child');
         newGameLi.addEventListener('click', () => {
-            const container = document.querySelector('.container');
-            container.remove();
             localStorage.removeItem('gameSave');
-            this.moves = 0;
-            this.init();
+            this.isPause = !this.isPause;
+            this.clearField();
         });
 
         const saveGameLi = document.querySelector('li:nth-child(2)');
@@ -359,44 +360,50 @@ const GemPuzzle = {
     },
 
     addResToScore() {
-        const minutes = document.querySelector('.minutes').innerHTML;
-        const seconds = document.querySelector('.seconds').innerHTML;
+        if (!this.isWin) {
+        } else {
+            const minutes = document.querySelector('.minutes').innerHTML;
+            const seconds = document.querySelector('.seconds').innerHTML;
 
-        const win = document.querySelector('.win');
-        win.innerHTML = `<i class="material-icons close_btn">close</i> Ура! Вы решили головоломку за ${minutes}:${seconds} и ${this.moves + 1} ходов`;
+            const win = document.querySelector('.win');
+            win.innerHTML = `<i class="material-icons close_btn">close</i> Ура! Вы решили головоломку за ${minutes}:${seconds} и ${this.moves + 1} ходов`;
 
-        const closeBtn = document.querySelector('.close_btn');
-        closeBtn.addEventListener('click', () => {
+            const closeBtn = document.querySelector('.close_btn');
+            closeBtn.addEventListener('click', () => {
+                win.classList.toggle('visible');
+            });
+
             win.classList.toggle('visible');
-        });
 
-        win.classList.toggle('visible');
+            const date = new Date();
+            const dateDay = date.getDay();
+            const dateMonth = date.getMonth();
+            const dateHour = date.getHours();
+            const dateMinutes = date.getMinutes();
 
-        const date = new Date();
-        const dateDay = date.getDay();
-        const dateMonth = date.getMonth();
-        const dateHour = date.getHours();
-        const dateMinutes = date.getMinutes();
+            const min = document.querySelector('.minutes').innerHTML;
+            const sec = document.querySelector('.seconds').innerHTML;
 
-        const min = document.querySelector('.minutes').innerHTML;
-        const sec = document.querySelector('.seconds').innerHTML;
+            let index = this.winMovesArr.length;
 
-        this.winMovesArr[this.bestScorePos] = [];
-        this.winMovesArr[this.bestScorePos].date = `${dateDay + 1}.${dateMonth + 1} ${dateHour}:${dateMinutes}`;
-        this.winMovesArr[this.bestScorePos].moves = `${this.moves + 1}`;
-        this.winMovesArr[this.bestScorePos].time = `${min}:${sec}`;
-        this.winMovesArr[this.bestScorePos].size = `${Math.sqrt(this.size)}x${Math.sqrt(this.size)}`;
+            this.winMovesArr[index] = {};
+            this.winMovesArr[index].date = `${dateDay + 1}.${dateMonth + 1} ${dateHour}:${dateMinutes}`;
+            this.winMovesArr[index].moves = `${this.moves + 1}`;
+            this.winMovesArr[index].time = `${min}:${sec}`;
+            this.winMovesArr[index].size = `${Math.sqrt(this.size)}x${Math.sqrt(this.size)}`;
 
-        this.bestScorePos += 1;
-        this.winMovesArr.sort((a, b) => {
-            if (parseInt(a.moves, 10) > parseInt(b.moves, 10)) {
-                return 1;
-            }
-            if (parseInt(a.moves, 10) < parseInt(b.moves, 10)) {
-                return -1;
-            }
-            return 0;
-        });
+            this.winMovesArr.sort((a, b) => {
+                if (parseInt(a.moves, 10) > parseInt(b.moves, 10)) {
+                    return 1;
+                }
+                if (parseInt(a.moves, 10) < parseInt(b.moves, 10)) {
+                    return -1;
+                }
+                return 0;
+            });
+        }
+        localStorage.setItem('bestScore', JSON.stringify(this.winMovesArr));
+
         const oldTable = document.querySelector('table');
         if (oldTable) {
             oldTable.remove();
