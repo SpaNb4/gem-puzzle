@@ -1,4 +1,4 @@
-import { checkNextEl } from './swap.js';
+import { checkNextEl } from './swap';
 
 export function handleDragStart(e) {
     e.target.style.opacity = '0.4';
@@ -52,6 +52,5 @@ export function handleDrop(e) {
     // если подняли и опустили не один и тот же элемент
     if (this.dragSrcEl !== e.target) {
         checkNextEl.call(this, dragSrcElI, dragSrcElJ, this.dragSrcEl);
-        this.moveSound();
     }
 }

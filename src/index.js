@@ -21,7 +21,7 @@ const GemPuzzle = {
     bgNum: null,
 
     init() {
-        let container = document.createElement('div');
+        const container = document.createElement('div');
         container.classList.add('container');
 
         const main = document.createElement('div');
@@ -136,7 +136,12 @@ const GemPuzzle = {
         solve.classList.add('solve');
         solve.innerHTML = '<i class="material-icons">last_page</i>';
         solve.addEventListener('click', () => {
-            this.interval = setInterval(this.solvePuzzle.bind(this), 200);
+            if (!this.interval) {
+                this.interval = setInterval(this.solvePuzzle.bind(this), 200);
+            } else {
+                clearInterval(this.interval);
+                this.interval = null;
+            }
         });
 
         const bottomMenu = document.createElement('div');
@@ -171,7 +176,6 @@ const GemPuzzle = {
         if (localStorage.getItem('bestScore')) {
             this.winMovesArr = JSON.parse(localStorage.getItem('bestScore'));
             this.addResToScore();
-        } else {
         }
 
         const elHeight = document.querySelector('.cells_item').offsetWidth;
@@ -204,8 +208,11 @@ const GemPuzzle = {
     clearField() {
         const container = document.querySelector('.container');
         container.remove();
-        this.arr = [];
+        this.isSound = true;
+        this.isPause = false;
+        this.isWin = false;
         this.currTime = 0;
+        this.arr = [];
         this.movesArr = [];
         this.moves = 0;
         clearInterval(this.timeInterval);
@@ -240,7 +247,7 @@ const GemPuzzle = {
             this.colsSet();
             // перемешивание игрового поля
             const isRandom = true;
-            for (let n = 1; n < 100; n += 1) {
+            for (let n = 1; n < 2000; n += 1) {
                 const i = this.randomInteger(0, Math.sqrt(this.size) - 1);
                 const j = this.randomInteger(0, Math.sqrt(this.size) - 1);
                 swap.checkNextEl.call(this, i, j, this.findEl(this.arr[i][j]), isRandom);
@@ -330,7 +337,6 @@ const GemPuzzle = {
             clearInterval(this.interval);
         } else {
             [i, j] = this.movesArr[this.movesArr.length - 1];
-
             swap.checkNextEl.call(this, i, j, this.findEl(this.arr[i][j]));
             this.movesArr.pop();
         }
@@ -360,8 +366,7 @@ const GemPuzzle = {
     },
 
     addResToScore() {
-        if (!this.isWin) {
-        } else {
+        if (this.isWin) {
             const minutes = document.querySelector('.minutes').innerHTML;
             const seconds = document.querySelector('.seconds').innerHTML;
 
@@ -384,7 +389,7 @@ const GemPuzzle = {
             const min = document.querySelector('.minutes').innerHTML;
             const sec = document.querySelector('.seconds').innerHTML;
 
-            let index = this.winMovesArr.length;
+            const index = this.winMovesArr.length;
 
             this.winMovesArr[index] = {};
             this.winMovesArr[index].date = `${dateDay + 1}.${dateMonth + 1} ${dateHour}:${dateMinutes}`;
