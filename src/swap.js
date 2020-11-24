@@ -72,34 +72,23 @@ export function checkWin(isRandom) {
     }
 }
 
+function swap(obj, target, i, j, isRandom) {
+    swapCell.call(obj, target, i, j);
+    checkWin.call(obj, isRandom);
+    if (!isRandom) {
+        obj.incrementMoves();
+        obj.moveSound();
+    }
+}
+
 export function checkNextEl(i, j, target, isRandom) {
     if (i !== this.arr.length - 1 && this.arr[i + 1][j] === '') {
-        swapCell.call(this, target, i, j);
-        checkWin.call(this, isRandom);
-        if (!isRandom) {
-            this.incrementMoves();
-            this.moveSound();
-        }
+        swap(this, target, i, j, isRandom);
     } else if (this.arr[i][j + 1] === '') {
-        swapCell.call(this, target, i, j);
-        checkWin.call(this, isRandom);
-        if (!isRandom) {
-            this.incrementMoves();
-            this.moveSound();
-        }
+        swap(this, target, i, j, isRandom);
     } else if (this.arr[i][j - 1] === '') {
-        swapCell.call(this, target, i, j);
-        checkWin.call(this, isRandom);
-        if (!isRandom) {
-            this.incrementMoves();
-            this.moveSound();
-        }
+        swap(this, target, i, j, isRandom);
     } else if (i !== 0 && this.arr[i - 1][j] === '') {
-        swapCell.call(this, target, i, j);
-        checkWin.call(this, isRandom);
-        if (!isRandom) {
-            this.incrementMoves();
-            this.moveSound();
-        }
+        swap(this, target, i, j, isRandom);
     }
 }

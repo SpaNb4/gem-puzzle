@@ -1,9 +1,10 @@
 import { checkNextEl } from './swap';
+import { move, over } from './const';
 
 export function handleDragStart(e) {
     e.target.style.opacity = '0.4';
     this.dragSrcEl = e.target;
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = move;
     e.dataTransfer.setData('text/html', e.target.innerHTML);
 }
 
@@ -11,7 +12,7 @@ export function handleDragEnd(e) {
     // удаляем класс со всех элементов
     e.target.style.opacity = 1;
     [].forEach.call(this.cols, (col) => {
-        col.classList.remove('over');
+        col.classList.remove(over);
     });
 }
 
@@ -19,18 +20,18 @@ export function handleDragOver(e) {
     if (e.preventDefault) {
         e.preventDefault();
     }
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = move;
     return false;
 }
 
 export function handleDragEnter() {
     // добавляем класс для текущего элемента
-    this.classList.add('over');
+    this.classList.add(over);
 }
 
 export function handleDragLeave() {
     // удаляем класс с предыдущего элемента
-    this.classList.remove('over');
+    this.classList.remove(over);
 }
 
 export function handleDrop(e) {

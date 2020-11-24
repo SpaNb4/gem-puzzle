@@ -1,3 +1,7 @@
+$white_color: #ffffff;
+$black_color: #000000;
+$green_color: #87ff8e;
+
 .body {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
@@ -57,16 +61,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #ffffff;
-            background-color: #b3aeae;
+            color: $white_color;
             font-family: 'Courier New', Courier, monospace;
             font-size: 24px;
             font-weight: bold;
             border-radius: 10px;
-            border: 1px solid #444;
-            //cursor: move;
+            border: 1px solid $black_color;
             &.over {
-                outline: 2px dashed #000;
+                outline: 2px dashed $black_color;
             }
         }
         .overlay,
@@ -74,7 +76,7 @@
         .win {
             display: none;
             font-size: 24px;
-            color: #87ff8e;
+            color: $green_color;
             position: absolute;
             z-index: 99;
             background: rgba(0, 0, 0, 0.6);
