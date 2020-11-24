@@ -462,6 +462,8 @@ const GemPuzzle = {
                 const j = this.arr[i].indexOf(e.target.innerHTML);
                 // i j - позиция элемента на который кликнули
                 swap.checkNextEl.call(this, i, j, e.target);
+                // eslint-disable-next-line no-use-before-define
+                layout();
                 break;
             }
         }
@@ -469,3 +471,49 @@ const GemPuzzle = {
 };
 
 GemPuzzle.init();
+
+// move animation
+const group = document.querySelector('.cells_items');
+const nodes = document.querySelectorAll('.cells_item');
+const total = nodes.length;
+// eslint-disable-next-line no-undef
+const ease = Power1.easeInOut;
+const boxes = [];
+
+for (let i = 0; i < total; i += 1) {
+    const node = nodes[i];
+
+    // eslint-disable-next-line no-undef
+    TweenLite.set(node, { x: 0 });
+
+    boxes[i] = {
+        // eslint-disable-next-line no-underscore-dangle
+        transform: node._gsTransform,
+        x: node.offsetLeft,
+        y: node.offsetTop,
+        node,
+    };
+}
+
+function layout() {
+    group.classList.toggle('reorder');
+
+    for (let i = 0; i < total; i += 1) {
+        const box = boxes[i];
+
+        const lastX = box.x;
+        const lastY = box.y;
+
+        box.x = box.node.offsetLeft;
+        box.y = box.node.offsetTop;
+
+        // eslint-disable-next-line no-continue
+        if (lastX === box.x && lastY === box.y) continue;
+
+        const x = box.transform.x + lastX - box.x;
+        const y = box.transform.y + lastY - box.y;
+
+        // eslint-disable-next-line no-undef
+        TweenLite.fromTo(box.node, 0.5, { x, y }, { x: 0, y: 0, ease });
+    }
+}
